@@ -1,0 +1,123 @@
+:root {
+    color-scheme: dark;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #111;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.container,
+.song-search-page {
+    max-width: 560px;
+    width: 100%;
+}
+
+.container {
+    padding: 30px;
+}
+
+.song-search-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(157, 92, 255, 0.25);
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+h1 {
+    font-size: 64px;
+    color: #9d5cff;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 32px;
+    margin-bottom: 24px;
+}
+
+button {
+    background: #9d5cff;
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    font-size: 22px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #8140ff;
+}
+
+p {
+    opacity: 0.8;
+    margin-top: 30px;
+}
+
+.song-search-page[hidden] {
+    display: none;
+}
+
+input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: #1b1b1b;
+    color: white;
+    font-size: 18px;
+    margin-bottom: 18px;
+}
+
+.song-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.song-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+}
+
+.song-item span {
+    font-size: 18px;
+    text-align: left;
+}
+
+.request-btn {
+    padding: 12px 18px;
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.request-btn.requested {
+    background: #2f8f58;
+}
+
+@media (max-width: 600px) {
+    .song-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .request-btn {
+        width: 100%;
+    }
+}
