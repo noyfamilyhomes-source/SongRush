@@ -11,7 +11,10 @@
     <div class="container" id="landingPage">
         <h1>🎸 SongRush</h1>
         <h2>You Pick.<br>We Play.</h2>
-        <button id="joinButton">Join Tonight's Show</button>
+        <div class="landing-actions">
+            <button id="joinButton">Join Tonight's Show</button>
+            <button id="dashboardButton" class="secondary-btn">Performer Dashboard</button>
+        </div>
         <p>No app required.</p>
     </div>
 
@@ -51,6 +54,25 @@
             </div>
             <p class="success-footer">Thank you for supporting live music!</p>
             <button id="backToListBtn">Back to Song List</button>
+        </div>
+    </div>
+
+    <div class="dashboard-page hidden" id="dashboardPage" aria-live="polite">
+        <div class="song-search-card dashboard-card">
+            <div class="dashboard-header">
+                <h1>🎸 SongRush</h1>
+                <button id="backToLandingBtn" class="secondary-btn small-btn" type="button">Back</button>
+            </div>
+            <h2>Performer Dashboard</h2>
+            <div class="dashboard-meta">
+                <div><strong>Current show:</strong> Andrew Noy Live</div>
+                <div><strong>Session code:</strong> SR-001</div>
+            </div>
+            <button id="toggleRequestsBtn" class="toggle-btn" type="button">Requests Open</button>
+            <div class="queue-section">
+                <h3>Queue</h3>
+                <div id="queueList" class="queue-list"></div>
+            </div>
         </div>
     </div>
 

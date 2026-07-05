@@ -17,7 +17,8 @@ body {
 }
 
 .container,
-.song-search-page {
+.song-search-page,
+.dashboard-page {
     max-width: 560px;
     width: 100%;
 }
@@ -57,6 +58,30 @@ button {
 
 button:hover {
     background: #8140ff;
+}
+
+.landing-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.landing-actions button {
+    width: 100%;
+}
+
+.secondary-btn {
+    background: #2b2b2b;
+    color: white;
+}
+
+.secondary-btn:hover {
+    background: #373737;
+}
+
+.small-btn {
+    padding: 10px 14px;
+    font-size: 16px;
 }
 
 p {
@@ -207,11 +232,6 @@ input {
     color: #d8c4ff;
 }
 
-.secondary-btn {
-    background: #2b2b2b;
-    color: white;
-}
-
 .success-screen {
     position: fixed;
     inset: 0;
@@ -251,6 +271,79 @@ input {
     gap: 8px;
     margin-bottom: 16px;
     font-size: 16px;
+}
+
+.dashboard-card {
+    text-align: left;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.dashboard-header h1 {
+    margin-bottom: 0;
+}
+
+.dashboard-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+    opacity: 0.9;
+}
+
+.toggle-btn {
+    width: 100%;
+    margin-bottom: 20px;
+    background: #2f8f58;
+}
+
+.toggle-btn.closed {
+    background: #b33f3f;
+}
+
+.queue-section h3 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    color: #9d5cff;
+}
+
+.queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.queue-item {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.queue-item-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.queue-item-meta {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 10px;
+}
+
+.queue-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.queue-actions button {
+    padding: 8px 12px;
+    font-size: 14px;
 }
 
 @media (max-width: 600px) {
