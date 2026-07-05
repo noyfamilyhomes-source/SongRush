@@ -11,6 +11,7 @@
     <div class="container" id="landingPage">
         <h1>🎸 SongRush</h1>
         <h2>You Pick.<br>We Play.</h2>
+        <div class="session-summary" data-session-summary></div>
         <div class="landing-actions">
             <button id="joinButton">Join Tonight's Show</button>
             <button id="dashboardButton" class="secondary-btn">Performer Dashboard</button>
@@ -22,6 +23,7 @@
         <div class="song-search-card">
             <h1>🎸 SongRush</h1>
             <h2>Request a Song</h2>
+            <div class="session-summary" data-session-summary></div>
             <input id="songSearchInput" type="text" placeholder="Search songs..." aria-label="Search songs">
             <div id="songList" class="song-list"></div>
         </div>
@@ -57,6 +59,49 @@
         </div>
     </div>
 
+    <div class="live-queue-page hidden" id="liveQueuePage" aria-live="polite">
+        <div class="live-queue-card">
+            <div class="brand-block">
+                <h1>🎸 SongRush</h1>
+                <p class="eyebrow">Live Queue</p>
+            </div>
+            <div class="session-summary" data-session-summary></div>
+
+            <section class="queue-panel now-playing-panel">
+                <div class="section-label">NOW PLAYING</div>
+                <div class="now-playing-card">
+                    <div class="music-badge">🎵</div>
+                    <div>
+                        <h2 id="nowPlayingTitle">Better Man</h2>
+                        <p id="nowPlayingArtist">Pearl Jam</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="queue-panel up-next-panel">
+                <div class="section-label">UP NEXT</div>
+                <ol id="upNextList" class="up-next-list"></ol>
+            </section>
+
+            <section class="queue-panel request-panel">
+                <div class="section-label">YOUR REQUEST</div>
+                <div class="request-highlight">
+                    <div class="music-badge">🎵</div>
+                    <div class="request-details">
+                        <h3 id="requestedSongTitle">Wonderwall</h3>
+                        <p class="request-stat"><span class="stat-label">Queue Position</span><span id="queuePosition" class="stat-value">#7</span></p>
+                        <p class="request-stat"><span class="stat-label">Estimated Wait</span><span id="estimatedWait" class="stat-value">23 Minutes</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="live-queue-actions">
+                <button id="browseMoreBtn" class="secondary-btn" type="button">Browse More Songs</button>
+                <button id="returnHomeBtn" type="button">Return Home</button>
+            </div>
+        </div>
+    </div>
+
     <div class="dashboard-page hidden" id="dashboardPage" aria-live="polite">
         <div class="song-search-card dashboard-card">
             <div class="dashboard-header">
@@ -64,9 +109,21 @@
                 <button id="backToLandingBtn" class="secondary-btn small-btn" type="button">Back</button>
             </div>
             <h2>Performer Dashboard</h2>
-            <div class="dashboard-meta">
-                <div><strong>Current show:</strong> Andrew Noy Live</div>
-                <div><strong>Session code:</strong> SR-001</div>
+            <div class="dashboard-session-card">
+                <div class="dashboard-session-header">
+                    <div>
+                        <p class="section-label">CURRENT SESSION</p>
+                        <h3 id="dashboardSessionName">Andrew Noy Live</h3>
+                    </div>
+                    <span id="dashboardStatusBadge" class="status-pill live">LIVE</span>
+                </div>
+                <div class="session-stats">
+                    <div><span class="stat-label">Session Code</span><span id="dashboardSessionCode" class="stat-value">SR-8274</span></div>
+                    <div><span class="stat-label">Venue</span><span id="dashboardVenue" class="stat-value">Demo Venue</span></div>
+                    <div><span class="stat-label">Start Time</span><span id="dashboardStartTime" class="stat-value">7:30 PM</span></div>
+                    <div><span class="stat-label">Table</span><span id="dashboardTable" class="stat-value">Table 12</span></div>
+                </div>
+                <button id="startNewSessionBtn" class="secondary-btn" type="button">Start New Session</button>
             </div>
             <button id="toggleRequestsBtn" class="toggle-btn" type="button">Requests Open</button>
             <div class="queue-section">

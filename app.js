@@ -1,6 +1,7 @@
 const landingPage = document.getElementById("landingPage");
 const songSearchPage = document.getElementById("songSearchPage");
 const dashboardPage = document.getElementById("dashboardPage");
+const liveQueuePage = document.getElementById("liveQueuePage");
 const joinButton = document.getElementById("joinButton");
 const dashboardButton = document.getElementById("dashboardButton");
 const backToLandingBtn = document.getElementById("backToLandingBtn");
@@ -15,44 +16,132 @@ const successTitle = document.getElementById("successTitle");
 const backToListBtn = document.getElementById("backToListBtn");
 const toggleRequestsBtn = document.getElementById("toggleRequestsBtn");
 const queueList = document.getElementById("queueList");
+const nowPlayingTitle = document.getElementById("nowPlayingTitle");
+const nowPlayingArtist = document.getElementById("nowPlayingArtist");
+const upNextList = document.getElementById("upNextList");
+const requestedSongTitle = document.getElementById("requestedSongTitle");
+const queuePosition = document.getElementById("queuePosition");
+const estimatedWait = document.getElementById("estimatedWait");
+const browseMoreBtn = document.getElementById("browseMoreBtn");
+const returnHomeBtn = document.getElementById("returnHomeBtn");
+const startNewSessionBtn = document.getElementById("startNewSessionBtn");
+const dashboardSessionName = document.getElementById("dashboardSessionName");
+const dashboardSessionCode = document.getElementById("dashboardSessionCode");
+const dashboardVenue = document.getElementById("dashboardVenue");
+const dashboardStartTime = document.getElementById("dashboardStartTime");
+const dashboardTable = document.getElementById("dashboardTable");
+const dashboardStatusBadge = document.getElementById("dashboardStatusBadge");
 
-let songs = [];
-let selectedSong = null;
-let requestsOpen = true;
-let queueItems = [
-  { id: 1, title: "Wonderwall", artist: "Oasis", type: "Standard", price: "$2" },
-  { id: 2, title: "Horses", artist: "Daryl Braithwaite", type: "Priority", price: "$10" },
-  { id: 3, title: "Sweet Child O' Mine", artist: "Guns N' Roses", type: "Jump Queue", price: "$15" }
-];
+const appState = {
+  session: {
+    id: "SR-8274",
+    performerName: "Andrew Noy",
+    showName: "Andrew Noy Live",
+    venueName: "Demo Venue",
+    tableNumber: "Table 12",
+    status: "LIVE",
+    requestsOpen: true,
+    startTime: "7:30 PM"
+  },
+  songs: [],
+  selectedSong: null,
+  currentView: "landing",
+  queue: [
+    { id: 1, title: "Wonderwall", artist: "Oasis", type: "Standard", price: "$2" },
+    { id: 2, title: "Horses", artist: "Daryl Braithwaite", type: "Priority", price: "$10" },
+    { id: 3, title: "Sweet Child O' Mine", artist: "Guns N' Roses", type: "Jump Queue", price: "$15" }
+  ],
+  liveQueue: {
+    nowPlaying: { title: "Better Man", artist: "Pearl Jam" },
+    upNext: [
+      { title: "Horses", artist: "Daryl Braithwaite" },
+      { title: "Wonderwall", artist: "Oasis" },
+      { title: "Tennessee Whiskey", artist: "Chris Stapleton" },
+      { title: "Fast Car", artist: "Tracy Chapman" },
+      { title: "Sweet Child O' Mine", artist: "Guns N' Roses" }
+    ],
+    request: { title: "Wonderwall", position: 7, estimatedWaitMinutes: 23 }
+  }
+};
+
+function getRequestsStatusLabel() {
+  return appState.session.requestsOpen ? "Requests Open" : "Requests Closed";
+}
+
+function renderSessionSummaries() {
+  const statusLabel = getRequestsStatusLabel();
+  const tableLabel = appState.session.tableNumber ? ` • ${appState.session.tableNumber}` : "";
+
+  document.querySelectorAll("[data-session-summary]").forEach((element) => {
+    element.innerHTML = `
+      <div class="session-summary-top">
+        <span class="status-pill ${appState.session.status.toLowerCase()}">${appState.session.status}</span>
+        <span class="session-code">${appState.session.id}</span>
+      </div>
+      <div class="session-summary-body">
+        <div class="session-show-name">${appState.session.showName}</div>
+        <div class="session-performer">${appState.session.performerName}</div>
+        <div class="session-venue">${appState.session.venueName}</div>
+        <div class="session-meta">${statusLabel}${tableLabel}</div>
+      </div>
+    `;
+  });
+}
+
+function renderDashboardSession() {
+  dashboardSessionName.textContent = appState.session.showName;
+  dashboardSessionCode.textContent = appState.session.id;
+  dashboardVenue.textContent = appState.session.venueName;
+  dashboardStartTime.textContent = appState.session.startTime;
+  dashboardTable.textContent = appState.session.tableNumber || "—";
+  dashboardStatusBadge.textContent = appState.session.status;
+  toggleRequestsBtn.textContent = getRequestsStatusLabel();
+  toggleRequestsBtn.classList.toggle("closed", !appState.session.requestsOpen);
+  toggleRequestsBtn.classList.toggle("open", appState.session.requestsOpen);
+}
+
+function renderSessionUi() {
+  renderSessionSummaries();
+  renderDashboardSession();
+}
 
 function showLandingPage() {
+  appState.currentView = "landing";
   landingPage.hidden = false;
   songSearchPage.hidden = true;
   dashboardPage.classList.add("hidden");
+  liveQueuePage.classList.add("hidden");
   successScreen.classList.add("hidden");
   requestModal.classList.add("hidden");
+  renderSessionUi();
 }
 
 function showSongList() {
+  appState.currentView = "songSearch";
   landingPage.hidden = true;
   songSearchPage.hidden = false;
   dashboardPage.classList.add("hidden");
+  liveQueuePage.classList.add("hidden");
   successScreen.classList.add("hidden");
   requestModal.classList.add("hidden");
+  renderSessionUi();
   songSearchInput.focus();
 }
 
 function showDashboard() {
+  appState.currentView = "dashboard";
   landingPage.hidden = true;
   songSearchPage.hidden = true;
   dashboardPage.classList.remove("hidden");
+  liveQueuePage.classList.add("hidden");
   successScreen.classList.add("hidden");
   requestModal.classList.add("hidden");
+  renderSessionUi();
   renderQueue();
 }
 
 function showRequestModal(song) {
-  selectedSong = song;
+  appState.selectedSong = song;
   modalTitle.textContent = song.title;
   modalArtist.textContent = song.artist;
   requestModal.classList.remove("hidden");
@@ -60,23 +149,43 @@ function showRequestModal(song) {
 
 function closeModal() {
   requestModal.classList.add("hidden");
-  selectedSong = null;
+  appState.selectedSong = null;
 }
 
-function showSuccessScreen(song) {
+function showLiveQueueScreen(song) {
   if (!song) {
     return;
   }
 
-  successTitle.textContent = song.title;
-  requestModal.classList.add("hidden");
+  appState.currentView = "liveQueue";
+  appState.liveQueue.request = {
+    title: song.title,
+    position: 7,
+    estimatedWaitMinutes: 23
+  };
+
+  const alreadyQueued = appState.queue.some((entry) => entry.title === song.title && entry.artist === song.artist);
+  if (!alreadyQueued) {
+    appState.queue.unshift({ id: Date.now(), title: song.title, artist: song.artist, type: "Standard", price: "$2" });
+  }
+
+  landingPage.hidden = true;
   songSearchPage.hidden = true;
-  successScreen.classList.remove("hidden");
+  dashboardPage.classList.add("hidden");
+  liveQueuePage.classList.remove("hidden");
+  successScreen.classList.add("hidden");
+  requestModal.classList.add("hidden");
+  renderSessionUi();
+  renderLiveQueue();
+}
+
+function showSuccessScreen(song) {
+  showLiveQueueScreen(song);
 }
 
 function renderSongs(filter = "") {
   const query = filter.trim().toLowerCase();
-  const visibleSongs = songs.filter((song) => {
+  const visibleSongs = appState.songs.filter((song) => {
     const haystack = `${song.title} ${song.artist} ${song.genre}`.toLowerCase();
     return haystack.includes(query);
   });
@@ -149,8 +258,8 @@ document.addEventListener("keydown", (event) => {
 
 document.querySelectorAll(".modal-option").forEach((optionButton) => {
   optionButton.addEventListener("click", () => {
-    if (selectedSong) {
-      showSuccessScreen(selectedSong);
+    if (appState.selectedSong) {
+      showSuccessScreen(appState.selectedSong);
     }
   });
 });
@@ -159,15 +268,18 @@ backToListBtn.addEventListener("click", () => {
   showSongList();
 });
 
+browseMoreBtn.addEventListener("click", showSongList);
+returnHomeBtn.addEventListener("click", showLandingPage);
+
 function renderQueue() {
   queueList.innerHTML = "";
 
-  if (queueItems.length === 0) {
+  if (appState.queue.length === 0) {
     queueList.innerHTML = '<p class="empty-state">No requests in the queue.</p>';
     return;
   }
 
-  queueItems.forEach((item, index) => {
+  appState.queue.forEach((item, index) => {
     const queueItem = document.createElement("div");
     queueItem.className = "queue-item";
 
@@ -186,7 +298,7 @@ function renderQueue() {
     markPlayedBtn.type = "button";
     markPlayedBtn.textContent = "Mark Played";
     markPlayedBtn.addEventListener("click", () => {
-      queueItems = queueItems.filter((queueItemEntry) => queueItemEntry.id !== item.id);
+      appState.queue = appState.queue.filter((queueItemEntry) => queueItemEntry.id !== item.id);
       renderQueue();
     });
 
@@ -196,7 +308,7 @@ function renderQueue() {
     moveUpBtn.disabled = index === 0;
     moveUpBtn.addEventListener("click", () => {
       if (index > 0) {
-        [queueItems[index - 1], queueItems[index]] = [queueItems[index], queueItems[index - 1]];
+        [appState.queue[index - 1], appState.queue[index]] = [appState.queue[index], appState.queue[index - 1]];
         renderQueue();
       }
     });
@@ -204,10 +316,10 @@ function renderQueue() {
     const moveDownBtn = document.createElement("button");
     moveDownBtn.type = "button";
     moveDownBtn.textContent = "Move Down";
-    moveDownBtn.disabled = index === queueItems.length - 1;
+    moveDownBtn.disabled = index === appState.queue.length - 1;
     moveDownBtn.addEventListener("click", () => {
-      if (index < queueItems.length - 1) {
-        [queueItems[index], queueItems[index + 1]] = [queueItems[index + 1], queueItems[index]];
+      if (index < appState.queue.length - 1) {
+        [appState.queue[index], appState.queue[index + 1]] = [appState.queue[index + 1], appState.queue[index]];
         renderQueue();
       }
     });
@@ -223,11 +335,80 @@ function renderQueue() {
   });
 }
 
+function renderLiveQueue() {
+  const { liveQueue } = appState;
+
+  nowPlayingTitle.textContent = liveQueue.nowPlaying.title;
+  nowPlayingArtist.textContent = liveQueue.nowPlaying.artist;
+
+  upNextList.innerHTML = "";
+  liveQueue.upNext.forEach((item, index) => {
+    const listItem = document.createElement("li");
+    listItem.className = "up-next-item";
+
+    const number = document.createElement("span");
+    number.className = "up-next-number";
+    number.textContent = index + 1;
+
+    const details = document.createElement("div");
+    details.className = "up-next-details";
+
+    const title = document.createElement("div");
+    title.className = "up-next-title";
+    title.textContent = item.title;
+
+    const artist = document.createElement("div");
+    artist.className = "up-next-artist";
+    artist.textContent = item.artist;
+
+    details.appendChild(title);
+    details.appendChild(artist);
+
+    listItem.appendChild(number);
+    listItem.appendChild(details);
+    upNextList.appendChild(listItem);
+  });
+
+  requestedSongTitle.textContent = liveQueue.request.title;
+  queuePosition.textContent = `#${liveQueue.request.position}`;
+  estimatedWait.textContent = `${liveQueue.request.estimatedWaitMinutes} Minutes`;
+}
+
+function startNewSession() {
+  const newCode = `SR-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+
+  appState.session = {
+    ...appState.session,
+    id: newCode,
+    requestsOpen: true,
+    status: "LIVE",
+    startTime: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+  };
+
+  appState.queue = [];
+  appState.liveQueue = {
+    nowPlaying: { title: "Better Man", artist: "Pearl Jam" },
+    upNext: [
+      { title: "Horses", artist: "Daryl Braithwaite" },
+      { title: "Wonderwall", artist: "Oasis" },
+      { title: "Tennessee Whiskey", artist: "Chris Stapleton" },
+      { title: "Fast Car", artist: "Tracy Chapman" },
+      { title: "Sweet Child O' Mine", artist: "Guns N' Roses" }
+    ],
+    request: { title: "Waiting for your first request", position: 1, estimatedWaitMinutes: 0 }
+  };
+
+  renderQueue();
+  renderLiveQueue();
+  renderSessionUi();
+}
+
 toggleRequestsBtn.addEventListener("click", () => {
-  requestsOpen = !requestsOpen;
-  toggleRequestsBtn.textContent = requestsOpen ? "Requests Open" : "Requests Closed";
-  toggleRequestsBtn.classList.toggle("closed", !requestsOpen);
+  appState.session.requestsOpen = !appState.session.requestsOpen;
+  renderSessionUi();
 });
+
+startNewSessionBtn.addEventListener("click", startNewSession);
 
 async function loadSongs() {
   try {
@@ -236,12 +417,15 @@ async function loadSongs() {
       throw new Error("Unable to load songs");
     }
 
-    songs = await response.json();
+    appState.songs = await response.json();
     renderSongs();
   } catch (error) {
     songList.innerHTML = '<p class="empty-state">No songs available.</p>';
   }
 }
 
+renderSessionUi();
+renderQueue();
+renderLiveQueue();
 loadSongs();
 
