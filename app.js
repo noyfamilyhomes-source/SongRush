@@ -14,6 +14,37 @@ const backToListBtn = document.getElementById("backToListBtn");
 let songs = [];
 let selectedSong = null;
 
+function showSongList() {
+  landingPage.hidden = true;
+  songSearchPage.hidden = false;
+  successScreen.classList.add("hidden");
+  requestModal.classList.add("hidden");
+  songSearchInput.focus();
+}
+
+function showRequestModal(song) {
+  selectedSong = song;
+  modalTitle.textContent = song.title;
+  modalArtist.textContent = song.artist;
+  requestModal.classList.remove("hidden");
+}
+
+function closeModal() {
+  requestModal.classList.add("hidden");
+  selectedSong = null;
+}
+
+function showSuccessScreen(song) {
+  if (!song) {
+    return;
+  }
+
+  successTitle.textContent = song.title;
+  requestModal.classList.add("hidden");
+  songSearchPage.hidden = true;
+  successScreen.classList.remove("hidden");
+}
+
 function renderSongs(filter = "") {
   const query = filter.trim().toLowerCase();
   const visibleSongs = songs.filter((song) => {
@@ -52,13 +83,11 @@ function renderSongs(filter = "") {
     details.appendChild(genre);
 
     const button = document.createElement("button");
+    button.type = "button";
     button.className = "request-btn";
     button.textContent = "Request $2";
     button.addEventListener("click", () => {
-      selectedSong = song;
-      modalTitle.textContent = song.title;
-      modalArtist.textContent = song.artist;
-      requestModal.classList.remove("hidden");
+      showRequestModal(song);
     });
 
     row.appendChild(details);
@@ -67,30 +96,22 @@ function renderSongs(filter = "") {
   });
 }
 
-joinButton.addEventListener("click", () => {
-  landingPage.hidden = true;
-  songSearchPage.hidden = false;
-  songSearchInput.focus();
-});
+joinButton.addEventListener("click", showSongList);
 
 songSearchInput.addEventListener("input", (event) => {
   renderSongs(event.target.value);
 });
 
-function closeModal() {
-  requestModal.classList.add("hidden");
-}
-
-function showSuccessScreen(song) {
-  successTitle.textContent = song.title;
-  requestModal.classList.add("hidden");
-  songSearchPage.hidden = true;
-  successScreen.classList.remove("hidden");
-}
-
 cancelRequestBtn.addEventListener("click", closeModal);
+
 requestModal.addEventListener("click", (event) => {
   if (event.target === requestModal) {
+    closeModal();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
     closeModal();
   }
 });
@@ -104,8 +125,7 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
 });
 
 backToListBtn.addEventListener("click", () => {
-  successScreen.classList.add("hidden");
-  songSearchPage.hidden = false;
+  showSongList();
 });
 
 async function loadSongs() {
