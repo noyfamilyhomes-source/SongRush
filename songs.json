@@ -1,0 +1,52 @@
+[
+  {
+    "title": "Sweet Child O' Mine",
+    "artist": "Guns N' Roses",
+    "genre": "Rock"
+  },
+  {
+    "title": "Better Man",
+    "artist": "Pearl Jam",
+    "genre": "Alternative Rock"
+  },
+  {
+    "title": "Wonderwall",
+    "artist": "Oasis",
+    "genre": "Britpop"
+  },
+  {
+    "title": "Horses",
+    "artist": "Patti Smith",
+    "genre": "Art Rock"
+  },
+  {
+    "title": "Shimmer",
+    "artist": "Fuel",
+    "genre": "Post-Grunge"
+  },
+  {
+    "title": "Bohemian Rhapsody",
+    "artist": "Queen",
+    "genre": "Rock"
+  },
+  {
+    "title": "Livin' on a Prayer",
+    "artist": "Bon Jovi",
+    "genre": "Rock"
+  },
+  {
+    "title": "Hotel California",
+    "artist": "Eagles",
+    "genre": "Rock"
+  },
+  {
+    "title": "Dreams",
+    "artist": "Fleetwood Mac",
+    "genre": "Classic Rock"
+  },
+  {
+    "title": "Take Me Home, Country Roads",
+    "artist": "John Denver",
+    "genre": "Country"
+  }
+]

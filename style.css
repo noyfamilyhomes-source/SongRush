@@ -84,6 +84,9 @@ input {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .song-item {
@@ -96,9 +99,23 @@ input {
     border-radius: 12px;
 }
 
-.song-item span {
-    font-size: 18px;
+.song-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     text-align: left;
+    flex: 1;
+}
+
+.song-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.song-artist,
+.song-genre {
+    font-size: 14px;
+    opacity: 0.8;
 }
 
 .request-btn {
@@ -109,6 +126,12 @@ input {
 
 .request-btn.requested {
     background: #2f8f58;
+}
+
+.empty-state {
+    margin: 0;
+    padding: 16px;
+    opacity: 0.8;
 }
 
 @media (max-width: 600px) {

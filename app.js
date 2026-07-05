@@ -1,20 +1,17 @@
-const songs = [
-  "Sweet Child O' Mine",
-  "Better Man",
-  "Wonderwall",
-  "Horses",
-  "Shimmer"
-];
-
 const landingPage = document.getElementById("landingPage");
 const songSearchPage = document.getElementById("songSearchPage");
 const joinButton = document.getElementById("joinButton");
 const songSearchInput = document.getElementById("songSearchInput");
 const songList = document.getElementById("songList");
 
+let songs = [];
+
 function renderSongs(filter = "") {
   const query = filter.trim().toLowerCase();
-  const visibleSongs = songs.filter((song) => song.toLowerCase().includes(query));
+  const visibleSongs = songs.filter((song) => {
+    const haystack = `${song.title} ${song.artist} ${song.genre}`.toLowerCase();
+    return haystack.includes(query);
+  });
 
   songList.innerHTML = "";
 
@@ -27,8 +24,24 @@ function renderSongs(filter = "") {
     const row = document.createElement("div");
     row.className = "song-item";
 
-    const title = document.createElement("span");
-    title.textContent = song;
+    const details = document.createElement("div");
+    details.className = "song-details";
+
+    const title = document.createElement("div");
+    title.className = "song-title";
+    title.textContent = song.title;
+
+    const artist = document.createElement("div");
+    artist.className = "song-artist";
+    artist.textContent = song.artist;
+
+    const genre = document.createElement("div");
+    genre.className = "song-genre";
+    genre.textContent = song.genre;
+
+    details.appendChild(title);
+    details.appendChild(artist);
+    details.appendChild(genre);
 
     const button = document.createElement("button");
     button.className = "request-btn";
@@ -39,7 +52,7 @@ function renderSongs(filter = "") {
       button.disabled = true;
     });
 
-    row.appendChild(title);
+    row.appendChild(details);
     row.appendChild(button);
     songList.appendChild(row);
   });
@@ -55,5 +68,19 @@ songSearchInput.addEventListener("input", (event) => {
   renderSongs(event.target.value);
 });
 
-renderSongs();
+async function loadSongs() {
+  try {
+    const response = await fetch("songs.json");
+    if (!response.ok) {
+      throw new Error("Unable to load songs");
+    }
+
+    songs = await response.json();
+    renderSongs();
+  } catch (error) {
+    songList.innerHTML = '<p class="empty-state">No songs available.</p>';
+  }
+}
+
+loadSongs();
 
