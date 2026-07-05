@@ -1,3 +1,5 @@
+import { isSupabaseConfigured, supabase } from "./supabase.js";
+
 const landingPage = document.getElementById("landingPage");
 const songSearchPage = document.getElementById("songSearchPage");
 const dashboardPage = document.getElementById("dashboardPage");
@@ -24,6 +26,7 @@ const queuePosition = document.getElementById("queuePosition");
 const estimatedWait = document.getElementById("estimatedWait");
 const browseMoreBtn = document.getElementById("browseMoreBtn");
 const returnHomeBtn = document.getElementById("returnHomeBtn");
+const homeFromSearchBtn = document.getElementById("homeFromSearchBtn");
 const startNewSessionBtn = document.getElementById("startNewSessionBtn");
 const dashboardSessionName = document.getElementById("dashboardSessionName");
 const dashboardSessionCode = document.getElementById("dashboardSessionCode");
@@ -31,6 +34,9 @@ const dashboardVenue = document.getElementById("dashboardVenue");
 const dashboardStartTime = document.getElementById("dashboardStartTime");
 const dashboardTable = document.getElementById("dashboardTable");
 const dashboardStatusBadge = document.getElementById("dashboardStatusBadge");
+const backendWarning = document.getElementById("backendWarning");
+
+let queueSubscription = null;
 
 const appState = {
   session: {
@@ -100,6 +106,136 @@ function renderDashboardSession() {
   toggleRequestsBtn.classList.toggle("open", appState.session.requestsOpen);
 }
 
+function showBackendWarning(show) {
+  if (!backendWarning) {
+    return;
+  }
+
+  backendWarning.classList.toggle("hidden", !show);
+}
+
+function mapSupabaseRequestToQueueItem(request) {
+  return {
+    id: request.id,
+    title: request.song_title,
+    artist: request.artist,
+    type: request.request_type,
+    price: request.price,
+    status: request.status,
+    createdAt: request.created_at
+  };
+}
+
+async function loadRequestsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) {
+    showBackendWarning(true);
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("requests")
+      .select("id, session_id, song_title, artist, request_type, price, status, created_at")
+      .eq("session_id", appState.session.id)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    appState.queue = (data || []).map(mapSupabaseRequestToQueueItem);
+    showBackendWarning(false);
+    renderQueue();
+    renderLiveQueue();
+  } catch (error) {
+    console.error("Unable to load Supabase requests", error);
+    showBackendWarning(true);
+    renderQueue();
+  }
+}
+
+function subscribeToQueueChanges() {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+
+  if (queueSubscription) {
+    supabase.removeChannel(queueSubscription);
+  }
+
+  queueSubscription = supabase
+    .channel(`requests-${appState.session.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "requests",
+        filter: `session_id=eq.${appState.session.id}`
+      },
+      () => {
+        loadRequestsFromSupabase();
+      }
+    )
+    .subscribe();
+}
+
+function getRequestTypeDetails(optionValue) {
+  switch (optionValue) {
+    case "priority":
+      return { label: "Priority", price: "$10" };
+    case "jump":
+      return { label: "Jump Queue", price: "$15" };
+    default:
+      return { label: "Standard", price: "$2" };
+  }
+}
+
+async function saveRequestToSupabase(song, optionValue) {
+  if (!isSupabaseConfigured || !supabase) {
+    appState.queue.unshift({
+      id: Date.now(),
+      title: song.title,
+      artist: song.artist,
+      type: getRequestTypeDetails(optionValue).label,
+      price: getRequestTypeDetails(optionValue).price,
+      status: "pending"
+    });
+    renderQueue();
+    return;
+  }
+
+  const requestDetails = getRequestTypeDetails(optionValue);
+  const requestPayload = {
+    session_id: appState.session.id,
+    song_title: song.title,
+    artist: song.artist,
+    request_type: requestDetails.label,
+    price: requestDetails.price,
+    status: "pending",
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const { error } = await supabase.from("requests").insert([requestPayload]);
+    if (error) {
+      throw error;
+    }
+    await loadRequestsFromSupabase();
+  } catch (error) {
+    console.error("Unable to save request to Supabase", error);
+    appState.queue.unshift({
+      id: Date.now(),
+      title: song.title,
+      artist: song.artist,
+      type: requestDetails.label,
+      price: requestDetails.price,
+      status: "pending"
+    });
+    renderQueue();
+  }
+}
+
 function renderSessionUi() {
   renderSessionSummaries();
   renderDashboardSession();
@@ -107,6 +243,7 @@ function renderSessionUi() {
 
 function showLandingPage() {
   appState.currentView = "landing";
+  appState.selectedSong = null;
   landingPage.hidden = false;
   songSearchPage.hidden = true;
   dashboardPage.classList.add("hidden");
@@ -138,6 +275,8 @@ function showDashboard() {
   requestModal.classList.add("hidden");
   renderSessionUi();
   renderQueue();
+  loadRequestsFromSupabase();
+  subscribeToQueueChanges();
 }
 
 function showRequestModal(song) {
@@ -237,6 +376,7 @@ function renderSongs(filter = "") {
 joinButton.addEventListener("click", showSongList);
 dashboardButton.addEventListener("click", showDashboard);
 backToLandingBtn.addEventListener("click", showLandingPage);
+homeFromSearchBtn.addEventListener("click", showLandingPage);
 
 songSearchInput.addEventListener("input", (event) => {
   renderSongs(event.target.value);
@@ -257,10 +397,15 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.querySelectorAll(".modal-option").forEach((optionButton) => {
-  optionButton.addEventListener("click", () => {
-    if (appState.selectedSong) {
-      showSuccessScreen(appState.selectedSong);
+  optionButton.addEventListener("click", async () => {
+    if (!appState.selectedSong) {
+      return;
     }
+
+    const optionValue = optionButton.dataset.option || "standard";
+    await saveRequestToSupabase(appState.selectedSong, optionValue);
+    closeModal();
+    showSuccessScreen(appState.selectedSong);
   });
 });
 
@@ -401,6 +546,8 @@ function startNewSession() {
   renderQueue();
   renderLiveQueue();
   renderSessionUi();
+  loadRequestsFromSupabase();
+  subscribeToQueueChanges();
 }
 
 toggleRequestsBtn.addEventListener("click", () => {
@@ -428,4 +575,6 @@ renderSessionUi();
 renderQueue();
 renderLiveQueue();
 loadSongs();
+loadRequestsFromSupabase();
+subscribeToQueueChanges();
 

@@ -22,7 +22,10 @@
     <div class="song-search-page" id="songSearchPage" hidden>
         <div class="song-search-card">
             <h1>🎸 SongRush</h1>
-            <h2>Request a Song</h2>
+            <div class="song-search-header">
+                <h2>Request a Song</h2>
+                <button id="homeFromSearchBtn" class="secondary-btn small-btn" type="button">Home</button>
+            </div>
             <div class="session-summary" data-session-summary></div>
             <input id="songSearchInput" type="text" placeholder="Search songs..." aria-label="Search songs">
             <div id="songList" class="song-list"></div>
@@ -109,6 +112,7 @@
                 <button id="backToLandingBtn" class="secondary-btn small-btn" type="button">Back</button>
             </div>
             <h2>Performer Dashboard</h2>
+            <div id="backendWarning" class="backend-warning hidden">Live backend not connected yet</div>
             <div class="dashboard-session-card">
                 <div class="dashboard-session-header">
                     <div>
@@ -133,7 +137,7 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
 

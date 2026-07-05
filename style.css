@@ -37,6 +37,18 @@ body {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
+.song-search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.song-search-header h2 {
+    margin: 0;
+}
+
 h1 {
     font-size: clamp(2.3rem, 6vw, 3.6rem);
     color: #9d5cff;
@@ -456,6 +468,16 @@ input {
 
 .dashboard-card {
     text-align: left;
+}
+
+.backend-warning {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(255, 198, 107, 0.16);
+    border: 1px solid rgba(255, 198, 107, 0.35);
+    color: #ffd89b;
+    font-size: 0.95rem;
 }
 
 .dashboard-session-card {
