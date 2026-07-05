@@ -3,8 +3,16 @@ const songSearchPage = document.getElementById("songSearchPage");
 const joinButton = document.getElementById("joinButton");
 const songSearchInput = document.getElementById("songSearchInput");
 const songList = document.getElementById("songList");
+const requestModal = document.getElementById("requestModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalArtist = document.getElementById("modalArtist");
+const cancelRequestBtn = document.getElementById("cancelRequestBtn");
+const successScreen = document.getElementById("successScreen");
+const successTitle = document.getElementById("successTitle");
+const backToListBtn = document.getElementById("backToListBtn");
 
 let songs = [];
+let selectedSong = null;
 
 function renderSongs(filter = "") {
   const query = filter.trim().toLowerCase();
@@ -47,9 +55,10 @@ function renderSongs(filter = "") {
     button.className = "request-btn";
     button.textContent = "Request $2";
     button.addEventListener("click", () => {
-      button.textContent = "Requested";
-      button.classList.add("requested");
-      button.disabled = true;
+      selectedSong = song;
+      modalTitle.textContent = song.title;
+      modalArtist.textContent = song.artist;
+      requestModal.classList.remove("hidden");
     });
 
     row.appendChild(details);
@@ -66,6 +75,37 @@ joinButton.addEventListener("click", () => {
 
 songSearchInput.addEventListener("input", (event) => {
   renderSongs(event.target.value);
+});
+
+function closeModal() {
+  requestModal.classList.add("hidden");
+}
+
+function showSuccessScreen(song) {
+  successTitle.textContent = song.title;
+  requestModal.classList.add("hidden");
+  songSearchPage.hidden = true;
+  successScreen.classList.remove("hidden");
+}
+
+cancelRequestBtn.addEventListener("click", closeModal);
+requestModal.addEventListener("click", (event) => {
+  if (event.target === requestModal) {
+    closeModal();
+  }
+});
+
+document.querySelectorAll(".modal-option").forEach((optionButton) => {
+  optionButton.addEventListener("click", () => {
+    if (selectedSong) {
+      showSuccessScreen(selectedSong);
+    }
+  });
+});
+
+backToListBtn.addEventListener("click", () => {
+  successScreen.classList.add("hidden");
+  songSearchPage.hidden = false;
 });
 
 async function loadSongs() {

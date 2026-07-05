@@ -24,6 +24,36 @@
         </div>
     </div>
 
+    <div id="requestModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-card">
+            <h3 id="modalTitle">Song Title</h3>
+            <p id="modalArtist" class="modal-artist">Artist</p>
+            <p class="modal-subtitle">Choose your request:</p>
+            <div class="modal-options">
+                <button class="modal-option" data-option="standard">🎵 Standard Request<br><span>$2</span></button>
+                <button class="modal-option" data-option="priority">⭐ Priority Request<br><span>$10</span></button>
+                <button class="modal-option" data-option="jump">🚀 Jump the Queue<br><span>$15</span></button>
+            </div>
+            <button id="cancelRequestBtn" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div id="successScreen" class="success-screen hidden">
+        <div class="song-search-card success-card">
+            <h1>🎸 SongRush</h1>
+            <h2>✅ Request Received</h2>
+            <p class="success-label">Song:</p>
+            <p id="successTitle" class="success-title">Song Title</p>
+            <p class="success-message">Your request has been added.</p>
+            <div class="success-meta">
+                <div>Queue Position: <strong>#7</strong></div>
+                <div>Estimated Wait: <strong>25 minutes</strong></div>
+            </div>
+            <p class="success-footer">Thank you for supporting live music!</p>
+            <button id="backToListBtn">Back to Song List</button>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

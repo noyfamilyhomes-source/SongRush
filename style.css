@@ -64,6 +64,10 @@ p {
     margin-top: 30px;
 }
 
+.hidden {
+    display: none !important;
+}
+
 .song-search-page[hidden] {
     display: none;
 }
@@ -132,6 +136,121 @@ input {
     margin: 0;
     padding: 16px;
     opacity: 0.8;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10;
+}
+
+.modal-card,
+.success-card {
+    width: min(100%, 480px);
+    background: #171717;
+    border: 1px solid rgba(157, 92, 255, 0.28);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.modal-card h3 {
+    margin: 0 0 8px;
+    font-size: 24px;
+    color: #9d5cff;
+}
+
+.modal-artist {
+    margin: 0 0 20px;
+    font-size: 16px;
+    opacity: 0.85;
+}
+
+.modal-subtitle {
+    margin: 0 0 14px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.modal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.modal-option,
+.secondary-btn {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 18px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-option {
+    background: rgba(157, 92, 255, 0.16);
+    color: white;
+    text-align: left;
+}
+
+.modal-option span {
+    display: inline-block;
+    margin-top: 4px;
+    font-weight: 700;
+    color: #d8c4ff;
+}
+
+.secondary-btn {
+    background: #2b2b2b;
+    color: white;
+}
+
+.success-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10;
+}
+
+.success-card {
+    text-align: center;
+}
+
+.success-label {
+    margin: 10px 0 6px;
+    font-size: 16px;
+    opacity: 0.85;
+}
+
+.success-title {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+}
+
+.success-message,
+.success-footer {
+    margin: 0 0 16px;
+}
+
+.success-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 16px;
 }
 
 @media (max-width: 600px) {
