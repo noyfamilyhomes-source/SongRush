@@ -474,8 +474,7 @@ function renderQueue() {
     meta.textContent = `${item.type} • ${item.price}`;
 
     const actions = document.createElement("div");
-    actions.className = "queue-actions";
-
+    
     const markPlayedBtn = document.createElement("button");
 markPlayedBtn.type = "button";
 markPlayedBtn.textContent = "▶ Play";
