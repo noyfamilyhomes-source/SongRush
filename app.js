@@ -1,3 +1,4 @@
+import { isSupabaseConfigured, supabase } from "./supabase.js";
 function getRequestTypeDetails(optionValue) {
   const requestTypes = {
     standard: { label: "Standard Request", price: "$2" },
