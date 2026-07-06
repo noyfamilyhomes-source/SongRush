@@ -137,6 +137,7 @@ async function loadRequestsFromSupabase() {
       .from("song_requests")
       .select("id, session_id, song_id, song_title, artist, priority, amount, status, created_at")
       .eq("session_id", appState.session.id)
+      .eq("status", "pending")
 .order("amount", { ascending: false })
 .order("created_at", { ascending: true });
     if (error) {
@@ -440,12 +441,27 @@ function renderQueue() {
     actions.className = "queue-actions";
 
     const markPlayedBtn = document.createElement("button");
-    markPlayedBtn.type = "button";
-    markPlayedBtn.textContent = "Mark Played";
-    markPlayedBtn.addEventListener("click", () => {
-      appState.queue = appState.queue.filter((queueItemEntry) => queueItemEntry.id !== item.id);
-      renderQueue();
-    });
+markPlayedBtn.type = "button";
+markPlayedBtn.textContent = "▶ Play";
+markPlayedBtn.addEventListener("click", async () => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from("song_requests")
+      .update({ status: "playing" })
+      .eq("id", item.id);
+
+    if (error) {
+      console.error("Unable to mark request as playing", error);
+      return;
+    }
+
+    await loadRequestsFromSupabase();
+    return;
+  }
+
+  appState.queue = appState.queue.filter((queueItemEntry) => queueItemEntry.id !== item.id);
+  renderQueue();
+});
 
     const moveUpBtn = document.createElement("button");
     moveUpBtn.type = "button";
