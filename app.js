@@ -1,40 +1,3 @@
-import { isSupabaseConfigured, supabase } from "./supabase.js";
-
-const landingPage = document.getElementById("landingPage");
-const songSearchPage = document.getElementById("songSearchPage");
-const dashboardPage = document.getElementById("dashboardPage");
-const liveQueuePage = document.getElementById("liveQueuePage");
-const joinButton = document.getElementById("joinButton");
-const dashboardButton = document.getElementById("dashboardButton");
-const backToLandingBtn = document.getElementById("backToLandingBtn");
-const songSearchInput = document.getElementById("songSearchInput");
-const songList = document.getElementById("songList");
-const requestModal = document.getElementById("requestModal");
-const modalTitle = document.getElementById("modalTitle");
-const modalArtist = document.getElementById("modalArtist");
-const cancelRequestBtn = document.getElementById("cancelRequestBtn");
-const successScreen = document.getElementById("successScreen");
-const successTitle = document.getElementById("successTitle");
-const backToListBtn = document.getElementById("backToListBtn");
-const toggleRequestsBtn = document.getElementById("toggleRequestsBtn");
-const queueList = document.getElementById("queueList");
-const nowPlayingTitle = document.getElementById("nowPlayingTitle");
-const nowPlayingArtist = document.getElementById("nowPlayingArtist");
-const upNextList = document.getElementById("upNextList");
-const requestedSongTitle = document.getElementById("requestedSongTitle");
-const queuePosition = document.getElementById("queuePosition");
-const estimatedWait = document.getElementById("estimatedWait");
-const browseMoreBtn = document.getElementById("browseMoreBtn");
-const returnHomeBtn = document.getElementById("returnHomeBtn");
-const homeFromSearchBtn = document.getElementById("homeFromSearchBtn");
-const startNewSessionBtn = document.getElementById("startNewSessionBtn");
-const dashboardSessionName = document.getElementById("dashboardSessionName");
-const dashboardSessionCode = document.getElementById("dashboardSessionCode");
-const dashboardVenue = document.getElementById("dashboardVenue");
-const dashboardStartTime = document.getElementById("dashboardStartTime");
-const dashboardTable = document.getElementById("dashboardTable");
-const dashboardStatusBadge = document.getElementById("dashboardStatusBadge");
-const backendWarning = document.getElementById("backendWarning");
 function getRequestTypeDetails(optionValue) {
   const requestTypes = {
     standard: { label: "Standard Request", price: "$2" },
@@ -43,9 +6,10 @@ function getRequestTypeDetails(optionValue) {
   };
 
   return requestTypes[optionValue] || requestTypes.standard;
+}
+
 async function startStripeCheckout(song, optionValue) {
   const requestDetails = getRequestTypeDetails(optionValue);
-}
 
   const response = await fetch("/.netlify/functions/create-checkout-session", {
     method: "POST",
@@ -67,9 +31,9 @@ async function startStripeCheckout(song, optionValue) {
   }
 
   window.location.href = data.url;
-}}
-let queueSubscription = null;
+}
 
+let queueSubscription = null;
 const appState = {
   session: {
     id: "SR-8274",
@@ -79,32 +43,12 @@ const appState = {
     tableNumber: "Table 12",
     status: "LIVE",
     requestsOpen: true,
-    startTime: "7:30 PM"
+startTime: "7:30 PM"
   },
   songs: [],
   selectedSong: null,
-  currentView: "landing",
-  queue: [
-    { id: 1, title: "Wonderwall", artist: "Oasis", type: "Standard", price: "$2" },
-    { id: 2, title: "Horses", artist: "Daryl Braithwaite", type: "Priority", price: "$10" },
-    { id: 3, title: "Sweet Child O' Mine", artist: "Guns N' Roses", type: "Jump Queue", price: "$15" }
-  ],
-  liveQueue: {
-    nowPlaying: { title: "Better Man", artist: "Pearl Jam" },
-    upNext: [
-      { title: "Horses", artist: "Daryl Braithwaite" },
-      { title: "Wonderwall", artist: "Oasis" },
-      { title: "Tennessee Whiskey", artist: "Chris Stapleton" },
-      { title: "Fast Car", artist: "Tracy Chapman" },
-      { title: "Sweet Child O' Mine", artist: "Guns N' Roses" }
-    ],
-    request: { title: "Wonderwall", position: 7, estimatedWaitMinutes: 23 }
-  }
+  currentView: "landing"
 };
-
-function getRequestsStatusLabel() {
-  return appState.session.requestsOpen ? "Requests Open" : "Requests Closed";
-}
 
 function renderSessionSummaries() {
   const statusLabel = getRequestsStatusLabel();
@@ -505,6 +449,10 @@ try {
   console.error("Stripe checkout failed", error);
   alert("Payment could not start. Please try again.");
 }
+  });
+});
+
+
 backToListBtn.addEventListener("click", () => {
   showSongList();
 });
