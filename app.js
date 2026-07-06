@@ -481,24 +481,35 @@ markPlayedBtn.type = "button";
 markPlayedBtn.textContent = "▶ Play";
 markPlayedBtn.addEventListener("click", async () => {
   if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase
+    const { error: completeError } = await supabase
+      .from("song_requests")
+      .update({ status: "completed" })
+      .eq("session_id", appState.session.id)
+      .eq("status", "playing");
+
+    if (completeError) {
+      console.error("Unable to complete current playing request", completeError);
+      return;
+    }
+
+    const { error: playError } = await supabase
       .from("song_requests")
       .update({ status: "playing" })
       .eq("id", item.id);
 
-    if (error) {
-      console.error("Unable to mark request as playing", error);
+    if (playError) {
+      console.error("Unable to mark request as playing", playError);
       return;
     }
 
     await loadRequestsFromSupabase();
+    await loadNowPlayingFromSupabase();
     return;
   }
 
   appState.queue = appState.queue.filter((queueItemEntry) => queueItemEntry.id !== item.id);
   renderQueue();
 });
-
     const moveUpBtn = document.createElement("button");
     moveUpBtn.type = "button";
     moveUpBtn.textContent = "Move Up";
