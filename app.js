@@ -119,8 +119,8 @@ function mapSupabaseRequestToQueueItem(request) {
     id: request.id,
     title: request.song_title,
     artist: request.artist,
-    type: request.request_type,
-    price: request.price,
+    type: request.priority,
+    price: request.amount,
     status: request.status,
     createdAt: request.created_at
   };
@@ -135,7 +135,7 @@ async function loadRequestsFromSupabase() {
   try {
     const { data, error } = await supabase
       .from("song_requests")
-      .select("id, session_id, song_title, artist, request_type, price, status, created_at")
+      .select("id, session_id, song_id, song_title, artist, priority, amount, status, created_at")
       .eq("session_id", appState.session.id)
       .order("created_at", { ascending: true });
 
@@ -210,14 +210,14 @@ async function saveRequestToSupabase(song, optionValue) {
     session_id: appState.session.id,
     song_title: song.title,
     artist: song.artist,
-    request_type: requestDetails.label,
-    price: requestDetails.price,
+    priority: requestDetails.label,
+    amount: requestDetails.price,
     status: "pending",
     created_at: new Date().toISOString()
   };
 
   try {
-    const { error } = await supabase.from("requests").insert([requestPayload]);
+    const { error } = await supabase.from("song_requests").insert([requestPayload]);
     if (error) {
       throw error;
     }
