@@ -211,7 +211,7 @@ async function saveRequestToSupabase(song, optionValue) {
     song_title: song.title,
     artist: song.artist,
     priority: requestDetails.label,
-    amount: requestDetails.price,
+    amount: Number(String(requestDetails.price).replace("$", "")),
     status: "pending",
     created_at: new Date().toISOString()
   };
