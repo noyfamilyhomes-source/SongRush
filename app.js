@@ -248,7 +248,7 @@ const REQUEST_PRICING = {
       status: "pending"
     });
     renderQueue();
-    return;
+    
   }
 
 async function saveRequestToSupabase(song, optionValue) {
