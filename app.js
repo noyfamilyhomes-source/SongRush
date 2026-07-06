@@ -43,7 +43,30 @@ function getRequestTypeDetails(optionValue) {
   };
 
   return requestTypes[optionValue] || requestTypes.standard;
-}
+async function startStripeCheckout(song, optionValue) {
+  const requestDetails = getRequestTypeDetails(optionValue);
+
+  const response = await fetch("/.netlify/functions/create-checkout-session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      songTitle: song.title,
+      artist: song.artist,
+      requestType: requestDetails.label,
+      amount: requestDetails.price
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.url) {
+    throw new Error(data.error || "Unable to start Stripe checkout");
+  }
+
+  window.location.href = data.url;
+}}
 let queueSubscription = null;
 
 const appState = {
@@ -475,9 +498,14 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
 }
     const optionValue = optionButton.dataset.option || "standard";
 
-    await saveRequestToSupabase(appState.selectedSong, optionValue);
-    closeModal();
-    showSuccessScreen();
+    try {
+  await startStripeCheckout(appState.selectedSong, optionValue);
+} catch (error) {
+  console.error("Stripe checkout failed", error);
+  await saveRequestToSupabase(appState.selectedSong, optionValue);
+  closeModal();
+  showSuccessScreen();
+}
   });
 });
 
