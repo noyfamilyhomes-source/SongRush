@@ -216,16 +216,27 @@ function subscribeToQueueChanges() {
     )
     .subscribe();
 }
+const REQUEST_PRICING = {
+  standard: {
+    label: "Standard",
+    price: "$2",
+    amount: 2,
+  },
+  priority: {
+    label: "Priority",
+    price: "$10",
+    amount: 10,
+  },
+  jump: {
+    label: "Jump Queue",
+    price: "$15",
+    amount: 15,
+  },
+};
+
 
 function getRequestTypeDetails(optionValue) {
-  switch (optionValue) {
-    case "priority":
-      return { label: "Priority", price: "$10" };
-    case "jump":
-      return { label: "Jump Queue", price: "$15" };
-    default:
-      return { label: "Standard", price: "$2" };
-  }
+  return REQUEST_PRICING[optionValue] || REQUEST_PRICING.standard;
 }
 
 async function saveRequestToSupabase(song, optionValue) {
