@@ -45,6 +45,7 @@ function getRequestTypeDetails(optionValue) {
   return requestTypes[optionValue] || requestTypes.standard;
 async function startStripeCheckout(song, optionValue) {
   const requestDetails = getRequestTypeDetails(optionValue);
+}
 
   const response = await fetch("/.netlify/functions/create-checkout-session", {
     method: "POST",
@@ -498,17 +499,12 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
 }
     const optionValue = optionButton.dataset.option || "standard";
 
-    try {
+try {
   await startStripeCheckout(appState.selectedSong, optionValue);
 } catch (error) {
   console.error("Stripe checkout failed", error);
-  await saveRequestToSupabase(appState.selectedSong, optionValue);
-  closeModal();
-  showSuccessScreen();
+  alert("Payment could not start. Please try again.");
 }
-  });
-});
-
 backToListBtn.addEventListener("click", () => {
   showSongList();
 });
