@@ -467,9 +467,11 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
     }
 
     const optionValue = optionButton.dataset.option || "standard";
+
     await saveRequestToSupabase(appState.selectedSong, optionValue);
-closeModal();
-showSuccessScreen();
+    closeModal();
+    showSuccessScreen();
+  });
 });
 
 backToListBtn.addEventListener("click", () => {
