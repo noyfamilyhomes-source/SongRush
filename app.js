@@ -154,7 +154,43 @@ async function loadRequestsFromSupabase() {
     renderQueue();
   }
 }
+async function loadNowPlayingFromSupabase() {
+  const titleEl = document.getElementById("now-playing-title");
+  const artistEl = document.getElementById("now-playing-artist");
 
+  if (!titleEl || !artistEl) {
+    return;
+  }
+
+  if (!isSupabaseConfigured || !supabase || !appState.session) {
+    titleEl.textContent = "Nothing currently playing";
+    artistEl.textContent = "";
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("song_requests")
+    .select("id, song_title, artist, status, created_at")
+    .eq("session_id", appState.session.id)
+    .eq("status", "playing")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Unable to load now playing", error);
+    return;
+  }
+
+  if (!data) {
+    titleEl.textContent = "Nothing currently playing";
+    artistEl.textContent = "";
+    return;
+  }
+
+  titleEl.textContent = data.song_title;
+  artistEl.textContent = data.artist || "";
+}
 function subscribeToQueueChanges() {
   if (!isSupabaseConfigured || !supabase) {
     return;
@@ -581,7 +617,7 @@ async function loadSongs() {
     }
 
     appState.songs = await response.json();
-    renderSongs();
+    renderSongs();›
   } catch (error) {
     songList.innerHTML = '<p class="empty-state">No songs available.</p>';
   }
@@ -590,6 +626,7 @@ async function loadSongs() {
 renderSessionUi();
 renderQueue();
 renderLiveQueue();
+loadNowPlayingFromSupabase();
 loadSongs();
 loadRequestsFromSupabase();
 subscribeToQueueChanges();
