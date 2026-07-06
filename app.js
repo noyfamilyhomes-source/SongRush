@@ -617,7 +617,7 @@ async function loadSongs() {
     }
 
     appState.songs = await response.json();
-    renderSongs();›
+    renderSongs();
   } catch (error) {
     songList.innerHTML = '<p class="empty-state">No songs available.</p>';
   }
