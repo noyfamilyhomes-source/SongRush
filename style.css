@@ -592,3 +592,29 @@ input {
         width: 100%;
     }
 }
+.now-playing-card {
+  background: #1f1f26;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 18px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.now-playing-card .eyebrow {
+  color: #a855f7;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+#now-playing-title {
+  margin: 0;
+  color: white;
+}
+
+#now-playing-artist {
+  margin-top: 6px;
+  color: #bdbdbd;
+}
