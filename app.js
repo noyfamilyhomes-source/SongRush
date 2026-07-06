@@ -35,7 +35,15 @@ const dashboardStartTime = document.getElementById("dashboardStartTime");
 const dashboardTable = document.getElementById("dashboardTable");
 const dashboardStatusBadge = document.getElementById("dashboardStatusBadge");
 const backendWarning = document.getElementById("backendWarning");
+function getRequestTypeDetails(optionValue) {
+  const requestTypes = {
+    standard: { label: "Standard Request", price: "$2" },
+    double: { label: "Double Request", price: "$10" },
+    priority: { label: "Jump the Queue", price: "$15" }
+  };
 
+  return requestTypes[optionValue] || requestTypes.standard;
+}
 let queueSubscription = null;
 
 const appState = {
@@ -464,8 +472,7 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
   optionButton.addEventListener("click", async () => {
     if (!appState.selectedSong) {
       return;
-    }
-
+}
     const optionValue = optionButton.dataset.option || "standard";
 
     await saveRequestToSupabase(appState.selectedSong, optionValue);
