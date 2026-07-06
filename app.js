@@ -236,8 +236,8 @@ const REQUEST_PRICING = {
 
 
 
-async function saveRequestToSupabase(song, optionValue) {
-async function saveRequestToSupabase(song, optionValue) {
+
+
   if (!isSupabaseConfigured || !supabase) {
     appState.queue.unshift({
       id: Date.now(),
@@ -251,7 +251,23 @@ async function saveRequestToSupabase(song, optionValue) {
     return;
   }
 
+async function saveRequestToSupabase(song, optionValue) {
+  if (!isSupabaseConfigured || !supabase) {
+    appState.queue.unshift({
+      id: Date.now(),
+      title: song.title,
+      artist: song.artist,
+      type: getRequestTypeDetails(optionValue).label,
+      price: getRequestTypeDetails(optionValue).price,
+      status: "pending"
+    });
+
+    renderQueue();
+    return;
+  }
+
   const requestDetails = getRequestTypeDetails(optionValue);
+
   const requestPayload = {
     session_id: appState.session.id,
     song_title: song.title,
@@ -264,12 +280,15 @@ async function saveRequestToSupabase(song, optionValue) {
 
   try {
     const { error } = await supabase.from("song_requests").insert([requestPayload]);
+
     if (error) {
       throw error;
     }
+
     await loadRequestsFromSupabase();
   } catch (error) {
     console.error("Unable to save request to Supabase", error);
+
     appState.queue.unshift({
       id: Date.now(),
       title: song.title,
@@ -278,9 +297,9 @@ async function saveRequestToSupabase(song, optionValue) {
       price: requestDetails.price,
       status: "pending"
     });
-    renderQueue();
-  }
-}
+
+    renderQueue(); }}
+    
 
 function renderSessionUi() {
   renderSessionSummaries();
