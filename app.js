@@ -248,7 +248,6 @@ const REQUEST_PRICING = {
       status: "pending"
     });
     renderQueue();
-    
   }
 
 async function saveRequestToSupabase(song, optionValue) {
@@ -468,8 +467,9 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
     }
 
     const optionValue = optionButton.dataset.option || "standard";
-    await startStripeCheckout(appState.selectedSong, optionValue);
-  });
+    await saveRequestToSupabase(appState.selectedSong, optionValue);
+closeModal();
+showSuccessScreen();
 });
 
 backToListBtn.addEventListener("click", () => {
