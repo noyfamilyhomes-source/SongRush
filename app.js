@@ -170,7 +170,7 @@ function subscribeToQueueChanges() {
       {
         event: "*",
         schema: "public",
-        table: "requests",
+        table: "song_requests",
         filter: `session_id=eq.${appState.session.id}`
       },
       () => {
