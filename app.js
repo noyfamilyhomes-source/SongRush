@@ -134,7 +134,7 @@ async function loadRequestsFromSupabase() {
 
   try {
     const { data, error } = await supabase
-      .from("requests")
+      .from("song_requests")
       .select("id, session_id, song_title, artist, request_type, price, status, created_at")
       .eq("session_id", appState.session.id)
       .order("created_at", { ascending: true });
