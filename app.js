@@ -235,9 +235,7 @@ const REQUEST_PRICING = {
 };
 
 
-function getRequestTypeDetails(optionValue) {
-  return REQUEST_PRICING[optionValue] || REQUEST_PRICING.standard;
-}
+
 
 async function saveRequestToSupabase(song, optionValue) {
   if (!isSupabaseConfigured || !supabase) {
