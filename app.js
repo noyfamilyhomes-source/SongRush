@@ -137,8 +137,8 @@ async function loadRequestsFromSupabase() {
       .from("song_requests")
       .select("id, session_id, song_id, song_title, artist, priority, amount, status, created_at")
       .eq("session_id", appState.session.id)
-      .order("created_at", { ascending: true });
-
+.order("amount", { ascending: false })
+.order("created_at", { ascending: true });
     if (error) {
       throw error;
     }
