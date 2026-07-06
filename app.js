@@ -236,7 +236,7 @@ const REQUEST_PRICING = {
 
 
 
-
+async function saveRequestToSupabase(song, optionValue) {
 async function saveRequestToSupabase(song, optionValue) {
   if (!isSupabaseConfigured || !supabase) {
     appState.queue.unshift({
@@ -449,9 +449,7 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
     }
 
     const optionValue = optionButton.dataset.option || "standard";
-    await saveRequestToSupabase(appState.selectedSong, optionValue);
-    closeModal();
-    showSuccessScreen(appState.selectedSong);
+    await startStripeCheckout(appState.selectedSong, optionValue);
   });
 });
 
