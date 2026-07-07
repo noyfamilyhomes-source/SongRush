@@ -21,7 +21,9 @@ async function startStripeCheckout(song, optionValue) {
       songTitle: song.title,
       artist: song.artist,
       requestType: requestDetails.label,
-      amount: requestDetails.price
+      amountCents: requestDetails.amount * 100,
+      sessionId: appState.session.id,
+      requesterName: appState.session.tableNumber
     })
   });
 
@@ -33,7 +35,6 @@ async function startStripeCheckout(song, optionValue) {
 
   window.location.href = data.url;
 }
-
 let queueSubscription = null;
 const appState = {
   session: {
@@ -44,14 +45,51 @@ const appState = {
     tableNumber: "Table 12",
     status: "LIVE",
     requestsOpen: true,
-startTime: "7:30 PM"
+    startTime: "7:30 PM"
   },
+
   songs: [],
   selectedSong: null,
-  currentView: "landing"
+  currentView: "landing",
+
+  queue: [
+    { id: 1, title: "Wonderwall", artist: "Oasis", type: "Standard", price: "$2" },
+    { id: 2, title: "Horses", artist: "Daryl Braithwaite", type: "Priority", price: "$10" },
+    { id: 3, title: "Sweet Child O' Mine", artist: "Guns N' Roses", type: "Jump Queue", price: "$15" }
+  ],
+
+  liveQueue: {
+    nowPlaying: {
+      title: "Better Man",
+      artist: "Pearl Jam"
+    },
+
+    upNext: [
+      { title: "Horses", artist: "Daryl Braithwaite" },
+      { title: "Wonderwall", artist: "Oasis" },
+      { title: "Tennessee Whiskey", artist: "Chris Stapleton" },
+      { title: "Fast Car", artist: "Tracy Chapman" },
+      { title: "Sweet Child O' Mine", artist: "Guns N' Roses" }
+    ],
+
+    request: {
+      title: "Wonderwall",
+      position: 7,
+      estimatedWaitMinutes: 23
+    }
+  }
 };
+function getRequestsStatusLabel() {
+  return appState.session.requestsOpen
+    ? "Requests Open"
+    : "Requests Closed";
+}
 
 function renderSessionSummaries() {
+  return appState.session.requestsOpen
+    ? "Requests Open"
+    : "Requests Closed";
+}
   const statusLabel = getRequestsStatusLabel();
   const tableLabel = appState.session.tableNumber ? ` • ${appState.session.tableNumber}` : "";
 
@@ -69,7 +107,6 @@ function renderSessionSummaries() {
       </div>
     `;
   });
-}
 
 function renderDashboardSession() {
   dashboardSessionName.textContent = appState.session.showName;
