@@ -1,9 +1,9 @@
 import { isSupabaseConfigured, supabase } from "./supabase.js";
 function getRequestTypeDetails(optionValue) {
   const requestTypes = {
-    standard: { label: "Standard Request", price: "$2" },
-    double: { label: "Double Request", price: "$10" },
-    priority: { label: "Jump the Queue", price: "$15" }
+    standard: { label: "Standard Request", price: "$2", amount: 2 },
+double: { label: "Double Request", price: "$10", amount: 10 },
+priority: { label: "Jump the Queue", price: "$15", amount: 15 }
   };
 
   return requestTypes[optionValue] || requestTypes.standard;
