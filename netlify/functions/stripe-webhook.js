@@ -42,20 +42,16 @@ exports.handler = async (event) => {
     };
   }
 
-  const session = stripeEvent.data.object;
-  const metadata = session.metadata || {};
-
-  const requestPayload = {
-    session_id: metadata.sessionId,
-    song_title: metadata.songTitle,
-    artist: metadata.artist,
-    priority: metadata.requestType,
-    requester_name: metadata.requesterName || "",
-    stripe_session_id: session.id,
-    payment__status,
-    amount: session.amount_total ? session.amount_total / 100 : null,
-    status: "pending",
-  };
+ const requestPayload = {
+  session_id: metadata.sessionId,
+  song_title: metadata.songTitle,
+  artist: metadata.artist,
+  priority: metadata.requestType,
+  requester_name: metadata.requesterName || "",
+  stripe_session_id: session.id,
+  amount: session.amount_total ? session.amount_total / 100 : null,
+  status: "pending",
+};
 
   const { error } = await supabase
     .from("song_requests")
