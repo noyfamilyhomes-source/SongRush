@@ -41,7 +41,8 @@ exports.handler = async (event) => {
       body: "Event ignored",
     };
   }
-
+ const session = stripeEvent.data.object;
+ const metadata = session.metadata || {}; 
  const requestPayload = {
   session_id: metadata.sessionId,
   song_title: metadata.songTitle,
