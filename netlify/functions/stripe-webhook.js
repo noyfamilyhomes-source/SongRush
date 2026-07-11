@@ -54,11 +54,11 @@ exports.handler = async (event) => {
     stripe_session_id: session.id,
     payment_status: session.payment_status,
     amount: session.amount_total ? session.amount_total / 100 : null,
-    status: "paid",
+    status: "pending",
   };
 
   const { error } = await supabase
-    .from("requests")
+    .from("song_requests")
     .insert([requestPayload]);
 
   if (error) {
