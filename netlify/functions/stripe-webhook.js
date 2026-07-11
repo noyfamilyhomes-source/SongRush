@@ -52,7 +52,7 @@ exports.handler = async (event) => {
     priority: metadata.requestType,
     requester_name: metadata.requesterName || "",
     stripe_session_id: session.id,
-    payment_status: session.payment_status,
+    payment__status,
     amount: session.amount_total ? session.amount_total / 100 : null,
     status: "pending",
   };
