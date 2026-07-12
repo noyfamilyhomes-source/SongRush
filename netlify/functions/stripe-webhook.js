@@ -49,7 +49,6 @@ exports.handler = async (event) => {
   artist: metadata.artist,
   priority: metadata.requestType,
   requester_name: metadata.requesterName || "",
-  stripe_session_id: session.id,
   amount: session.amount_total ? session.amount_total / 100 : null,
   status: "pending",
 };
