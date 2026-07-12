@@ -182,8 +182,7 @@ function showBackendWarning(show) {
 
   backendWarning.classList.toggle("hidden", !show);
 }
-
-function mapSupabaseRequestToQueueItem(request) {
+ function mapSupabaseRequestToQueueItem(request) {
   return {
     id: request.id,
     title: request.song_title,
@@ -191,6 +190,7 @@ function mapSupabaseRequestToQueueItem(request) {
     type: request.priority,
     price: request.amount,
     status: request.status,
+    queueOrder: request.queue_order,
     createdAt: request.created_at,
   };
 }
@@ -204,32 +204,42 @@ async function loadRequestsFromSupabase() {
   try {
     const { data, error } = await supabase
       .from("song_requests")
-    .select(
-  "id, session_id, song_id, song_title, artist, priority, amount, status, queue_order, created_at",
-)
-.eq("session_id", appState.session.id)
-.eq("status", "pending")
-.order("queue_order", {
-  ascending: true,
-  nullsFirst: false,
-})
-.order("created_at", {
-  ascending: true,
-});
+     .select(
+       "id, session_id, song_title, artist, priority, amount, status, queue_order, request_token, created_at"
+       )
+      .eq("session_id", appState.session.id)
+      .eq("status", "pending")
+      .order("queue_order", {
+        ascending: true,
+        nullsFirst: false,
+      })
+      .order("created_at", {
+        ascending: true,
+      });
+
     if (error) {
       throw error;
     }
 
-    appState.queue = (data || []).map(mapSupabaseRequestToQueueItem);
+    appState.queue = (data || []).map(
+      mapSupabaseRequestToQueueItem,
+    );
+
     showBackendWarning(false);
     renderQueue();
     renderLiveQueue();
   } catch (error) {
-    console.error("Unable to load Supabase requests", error);
+    console.error(
+      "Unable to load Supabase requests",
+      error,
+    );
+
     showBackendWarning(true);
     renderQueue();
   }
 }
+
+
 async function loadNowPlayingFromSupabase() {
   const titleEl = document.getElementById("now-playing-title");
   const artistEl = document.getElementById("now-playing-artist");
@@ -518,7 +528,7 @@ async function loadCustomerLiveQueueFromSupabase() {
     await supabase
       .from("song_requests")
       .select(
-        "id, session_id, song_title, artist, priority, amount, status, request_token, created_at"
+        "id, session_id, song_title, artist, priority, amount, status,queue_order, request_token, created_at"
       )
       .eq("request_token", requestToken)
       .maybeSingle();
@@ -726,6 +736,16 @@ dashboardButton.addEventListener("click", showDashboard);
 backToLandingBtn.addEventListener("click", showLandingPage);
 homeFromSearchBtn.addEventListener("click", showLandingPage);
 
+const browseMoreSongsBtn = document.getElementById("browseMoreBtn");
+const returnHomeBtn = document.getElementById("returnHomeBtn");
+
+if (browseMoreSongsBtn) {
+  browseMoreSongsBtn.addEventListener("click", showSongList);
+}
+
+if (returnHomeBtn) {
+  returnHomeBtn.addEventListener("click", showLandingPage);
+}
 songSearchInput.addEventListener("input", (event) => {
   renderSongs(event.target.value);
 });
@@ -760,6 +780,86 @@ document.querySelectorAll(".modal-option").forEach((optionButton) => {
     }
   });
 });
+async function moveQueueRequest(item, index, direction, clickedButton) {
+  const targetIndex = index + direction;
+
+  if (targetIndex < 0 || targetIndex >= appState.queue.length) {
+    return;
+  }
+
+  const targetItem = appState.queue[targetIndex];
+
+  if (!isSupabaseConfigured || !supabase) {
+    [appState.queue[index], appState.queue[targetIndex]] = [
+      appState.queue[targetIndex],
+      appState.queue[index],
+    ];
+
+    renderQueue();
+    return;
+  }
+
+  const itemQueueOrder = item.queueOrder;
+  const targetQueueOrder = targetItem.queueOrder;
+
+  if (
+    itemQueueOrder === undefined ||
+    itemQueueOrder === null ||
+    targetQueueOrder === undefined ||
+    targetQueueOrder === null
+  ) {
+    console.error("Unable to move queue request: queue_order is missing", {
+      item,
+      targetItem,
+    });
+
+    return;
+  }
+
+  clickedButton.disabled = true;
+  clickedButton.textContent = "Moving...";
+
+  const { error: itemUpdateError } = await supabase
+    .from("song_requests")
+    .update({ queue_order: targetQueueOrder })
+    .eq("id", item.id)
+    .eq("session_id", appState.session.id);
+
+  if (itemUpdateError) {
+    console.error("Unable to update moved request", itemUpdateError);
+    await loadRequestsFromSupabase();
+    return;
+  }
+
+  const { error: targetUpdateError } = await supabase
+    .from("song_requests")
+    .update({ queue_order: itemQueueOrder })
+    .eq("id", targetItem.id)
+    .eq("session_id", appState.session.id);
+
+  if (targetUpdateError) {
+    console.error(
+      "Unable to update neighbouring request",
+      targetUpdateError,
+    );
+
+    const { error: rollbackError } = await supabase
+      .from("song_requests")
+      .update({ queue_order: itemQueueOrder })
+      .eq("id", item.id)
+      .eq("session_id", appState.session.id);
+
+    if (rollbackError) {
+      console.error("Unable to roll back queue movement", rollbackError);
+    }
+
+    await loadRequestsFromSupabase();
+    return;
+  }
+
+  await loadRequestsFromSupabase();
+}
+
 function renderQueue() {
   queueList.innerHTML = "";
 
@@ -825,32 +925,23 @@ function renderQueue() {
 
       renderQueue();
     });
+
     const moveUpBtn = document.createElement("button");
     moveUpBtn.type = "button";
     moveUpBtn.textContent = "Move Up";
     moveUpBtn.disabled = index === 0;
-    moveUpBtn.addEventListener("click", () => {
-      if (index > 0) {
-        [appState.queue[index - 1], appState.queue[index]] = [
-          appState.queue[index],
-          appState.queue[index - 1],
-        ];
-        renderQueue();
-      }
+
+    moveUpBtn.addEventListener("click", async () => {
+      await moveQueueRequest(item, index, -1, moveUpBtn);
     });
 
     const moveDownBtn = document.createElement("button");
     moveDownBtn.type = "button";
     moveDownBtn.textContent = "Move Down";
     moveDownBtn.disabled = index === appState.queue.length - 1;
-    moveDownBtn.addEventListener("click", () => {
-      if (index < appState.queue.length - 1) {
-        [appState.queue[index], appState.queue[index + 1]] = [
-          appState.queue[index + 1],
-          appState.queue[index],
-        ];
-        renderQueue();
-      }
+
+    moveDownBtn.addEventListener("click", async () => {
+      await moveQueueRequest(item, index, 1, moveDownBtn);
     });
 
     actions.appendChild(markPlayedBtn);
@@ -864,13 +955,11 @@ function renderQueue() {
   });
 }
 
-
 function renderLiveQueue() {
   const { liveQueue } = appState;
 
   nowPlayingTitle.textContent =
-    liveQueue.nowPlaying?.title ||
-    "Nothing currently playing";
+    liveQueue.nowPlaying?.title || "Nothing currently playing";
 
   nowPlayingArtist.textContent =
     liveQueue.nowPlaying?.artist || "";
@@ -914,8 +1003,7 @@ function renderLiveQueue() {
   }
 
   requestedSongTitle.textContent =
-    liveQueue.request?.title ||
-    "Finding your request...";
+    liveQueue.request?.title || "Finding your request...";
 
   if (liveQueue.request?.status === "playing") {
     queuePosition.textContent = "Now Playing";
@@ -941,8 +1029,11 @@ function renderLiveQueue() {
   estimatedWait.textContent =
     `${liveQueue.request.estimatedWaitMinutes} Minutes`;
 }
+
 function startNewSession() {
-  const newCode = `SR-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+  const newCode = `SR-${String(
+    Math.floor(Math.random() * 9000) + 1000
+  )}`;
 
   appState.session = {
     ...appState.session,
@@ -956,29 +1047,30 @@ function startNewSession() {
   };
 
   appState.queue = [];
+
   appState.liveQueue = {
-    nowPlaying: { title: "Better Man", artist: "Pearl Jam" },
-    upNext: [
-      { title: "Horses", artist: "Daryl Braithwaite" },
-      { title: "Wonderwall", artist: "Oasis" },
-      { title: "Tennessee Whiskey", artist: "Chris Stapleton" },
-      { title: "Fast Car", artist: "Tracy Chapman" },
-      { title: "Sweet Child O' Mine", artist: "Guns N' Roses" },
-    ],
+    nowPlaying: {
+      title: "Nothing currently playing",
+      artist: "",
+    },
+    upNext: [],
     request: {
       title: "Waiting for your first request",
-      position: 1,
-      estimatedWaitMinutes: 0,
+      position: null,
+      estimatedWaitMinutes: null,
+      status: "processing",
     },
   };
 
   renderQueue();
   renderLiveQueue();
   renderSessionUi();
+
   loadRequestsFromSupabase();
+  loadNowPlayingFromSupabase();
+  loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
 }
-
 toggleRequestsBtn.addEventListener("click", () => {
   appState.session.requestsOpen = !appState.session.requestsOpen;
   renderSessionUi();
@@ -1042,13 +1134,11 @@ async function initialiseApp() {
 
   subscribeToQueueChanges();
 
-  const urlParams = new URLSearchParams(
-    window.location.search
-  );
-
+  const urlParams = new URLSearchParams(window.location.search);
   const paymentStatus = urlParams.get("payment");
+  const savedRequestToken = localStorage.getItem("songrushRequestToken");
 
-  if (paymentStatus === "success") {
+  if (paymentStatus === "success" || savedRequestToken) {
     showLiveQueueScreen();
 
     window.history.replaceState(
@@ -1058,5 +1148,4 @@ async function initialiseApp() {
     );
   }
 }
-
 initialiseApp();
