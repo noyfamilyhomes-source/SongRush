@@ -45,13 +45,15 @@ export const handler = async (event) => {
     amountCents,
     sessionId,
     requesterName,
+    requestToken,
   } = payload;
 
   if (
     !songTitle ||
     !requestType ||
     !amountCents ||
-    !sessionId
+    !sessionId ||
+    !requestToken
   ) {
     return {
       statusCode: 400,
@@ -64,41 +66,42 @@ export const handler = async (event) => {
   try {
     const stripe = new Stripe(stripeSecretKey);
 
-    const checkoutSession =
-      await stripe.checkout.sessions.create({
-        mode: "payment",
-        payment_method_types: ["card"],
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
 
-        line_items: [
-          {
-            price_data: {
-              currency: "aud",
-              unit_amount: amountCents,
-              product_data: {
-                name: `${requestType}: ${songTitle}`,
-                description: artist
-                  ? `Artist: ${artist}`
-                  : "SongRush Request",
-              },
+      line_items: [
+        {
+          price_data: {
+            currency: "aud",
+            unit_amount: amountCents,
+            product_data: {
+              name: `${requestType}: ${songTitle}`,
+              description: artist
+                ? `Artist: ${artist}`
+                : "SongRush Request",
             },
-            quantity: 1,
           },
-        ],
-
-        success_url:
-          `${siteUrl}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-
-        cancel_url:
-          `${siteUrl}/?payment=cancelled`,
-
-        metadata: {
-          sessionId,
-          songTitle,
-          artist: artist || "",
-          requestType,
-          requesterName: requesterName || "",
+          quantity: 1,
         },
-      });
+      ],
+
+      success_url:
+        `${siteUrl}/?payment=success` +
+        `&session_id={CHECKOUT_SESSION_ID}` +
+        `&request_token=${encodeURIComponent(requestToken)}`,
+
+      cancel_url: `${siteUrl}/?payment=cancelled`,
+
+      metadata: {
+        sessionId,
+        songTitle,
+        artist: artist || "",
+        requestType,
+        requesterName: requesterName || "",
+        requestToken,
+      },
+    });
 
     return {
       statusCode: 200,
@@ -107,6 +110,8 @@ export const handler = async (event) => {
       }),
     };
   } catch (error) {
+    console.error("Unable to create Stripe Checkout session:", error);
+
     return {
       statusCode: 500,
       body: JSON.stringify({
