@@ -429,8 +429,14 @@ function showRequestModal(song) {
   const modalTitle = document.getElementById("modalTitle");
   const modalArtist = document.getElementById("modalArtist");
 
-  modalTitle.textContent = song.title;
-  modalArtist.textContent = song.artist;
+  if (modalTitle) {
+    modalTitle.textContent = song.title;
+  }
+
+  if (modalArtist) {
+    modalArtist.textContent = song.artist || "";
+  }
+
   requestModal.classList.remove("hidden");
 }
 function closeModal() {
