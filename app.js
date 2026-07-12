@@ -23,25 +23,54 @@ function getRequestTypeDetails(optionValue) {
 async function startStripeCheckout(song, optionValue) {
   const requestDetails = getRequestTypeDetails(optionValue);
 
-  const response = await fetch("/.netlify/functions/create-checkout-session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      songTitle: song.title,
+  const requestToken =
+    typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `songrush-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2)}`;
+
+  localStorage.setItem("songrushRequestToken", requestToken);
+
+  localStorage.setItem(
+    "songrushPendingRequest",
+    JSON.stringify({
+      title: song.title,
       artist: song.artist,
       requestType: requestDetails.label,
-      amountCents: requestDetails.amount * 100,
+      requestToken,
       sessionId: appState.session.id,
-      requesterName: appState.session.tableNumber,
-    }),
-  });
+    })
+  );
+
+  const response = await fetch(
+    "/.netlify/functions/create-checkout-session",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        songTitle: song.title,
+        artist: song.artist,
+        requestType: requestDetails.label,
+        amountCents: requestDetails.amount * 100,
+        sessionId: appState.session.id,
+        requesterName: appState.session.tableNumber,
+        requestToken,
+      }),
+    }
+  );
 
   const data = await response.json();
 
   if (!response.ok || !data.url) {
-    throw new Error(data.error || "Unable to start Stripe checkout");
+    localStorage.removeItem("songrushRequestToken");
+    localStorage.removeItem("songrushPendingRequest");
+
+    throw new Error(
+      data.error || "Unable to start Stripe checkout"
+    );
   }
 
   window.location.href = data.url;
@@ -175,14 +204,18 @@ async function loadRequestsFromSupabase() {
   try {
     const { data, error } = await supabase
       .from("song_requests")
-      .select(
-        "id, session_id, song_id, song_title, artist, priority, amount, status, created_at",
-      )
-      .eq("session_id", appState.session.id)
-      .eq("status", "pending")
-      .order("amount", { ascending: false })
-      .order("created_at", { ascending: true });
-
+    .select(
+  "id, session_id, song_id, song_title, artist, priority, amount, status, queue_order, created_at",
+)
+.eq("session_id", appState.session.id)
+.eq("status", "pending")
+.order("queue_order", {
+  ascending: true,
+  nullsFirst: false,
+})
+.order("created_at", {
+  ascending: true,
+});
     if (error) {
       throw error;
     }
@@ -313,7 +346,11 @@ function subscribeToQueueChanges() {
         await loadRequestsFromSupabase();
         await loadNowPlayingFromSupabase();
         await loadPlayedTonightFromSupabase();
-      },
+
+        if (appState.currentView === "liveQueue") {
+          await loadCustomerLiveQueueFromSupabase();
+        }
+      }
     )
     .subscribe();
 }
@@ -436,31 +473,186 @@ function closeModal() {
   appState.selectedSong = null;
 }
 
-function showLiveQueueScreen(song) {
-  if (!song) {
+function getCurrentRequestToken() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get("request_token");
+
+  if (tokenFromUrl) {
+    localStorage.setItem("songrushRequestToken", tokenFromUrl);
+    return tokenFromUrl;
+  }
+
+  return localStorage.getItem("songrushRequestToken");
+}
+
+function getPendingRequestDetails() {
+  const storedRequest = localStorage.getItem(
+    "songrushPendingRequest"
+  );
+
+  if (!storedRequest) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedRequest);
+  } catch (error) {
+    console.error(
+      "Unable to read pending request details",
+      error
+    );
+
+    return null;
+  }
+}
+
+async function loadCustomerLiveQueueFromSupabase() {
+  const requestToken = getCurrentRequestToken();
+  const pendingRequest = getPendingRequestDetails();
+
+  if (!requestToken || !isSupabaseConfigured || !supabase) {
     return;
   }
 
-  appState.currentView = "liveQueue";
-  appState.liveQueue.request = {
-    title: song.title,
-    position: 7,
-    estimatedWaitMinutes: 23,
-  };
+  const { data: customerRequest, error: customerError } =
+    await supabase
+      .from("song_requests")
+      .select(
+        "id, session_id, song_title, artist, priority, amount, status, request_token, created_at"
+      )
+      .eq("request_token", requestToken)
+      .maybeSingle();
 
-  const alreadyQueued = appState.queue.some(
-    (entry) => entry.title === song.title && entry.artist === song.artist,
+  if (customerError) {
+    console.error(
+      "Unable to load customer request",
+      customerError
+    );
+
+    return;
+  }
+
+  if (!customerRequest) {
+    appState.liveQueue.request = {
+      title:
+        pendingRequest?.title || "Finding your request...",
+      position: null,
+      estimatedWaitMinutes: null,
+      status: "processing",
+    };
+
+    renderLiveQueue();
+    return;
+  }
+
+  if (customerRequest.session_id !== appState.session.id) {
+    appState.session.id = customerRequest.session_id;
+    renderSessionUi();
+    subscribeToQueueChanges();
+  }
+
+const { data: pendingQueue, error: queueError } =
+  await supabase
+    .from("song_requests")
+    .select(
+      "id, song_title, artist, priority, amount, status, queue_order, created_at"
+    )
+    .eq("session_id", customerRequest.session_id)
+    .eq("status", "pending")
+    .order("queue_order", {
+      ascending: true,
+      nullsFirst: false,
+    })
+    .order("created_at", {
+      ascending: true,
+    });
+  if (queueError) {
+    console.error(
+      "Unable to load customer queue",
+      queueError
+    );
+
+    return;
+  }
+
+  const { data: nowPlaying, error: nowPlayingError } =
+    await supabase
+      .from("song_requests")
+      .select("id, song_title, artist, status, created_at")
+      .eq("session_id", customerRequest.session_id)
+      .eq("status", "playing")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+  if (nowPlayingError) {
+    console.error(
+      "Unable to load customer now playing",
+      nowPlayingError
+    );
+
+    return;
+  }
+
+  const queue = pendingQueue || [];
+
+  const customerQueueIndex = queue.findIndex(
+    (request) => request.id === customerRequest.id
   );
 
-  if (!alreadyQueued) {
-    appState.queue.unshift({
-      id: Date.now(),
-      title: song.title,
-      artist: song.artist,
-      type: "Standard Request",
-      price: "$5",
-    });
-  }
+  const queuePosition =
+    customerQueueIndex >= 0
+      ? customerQueueIndex + 1
+      : null;
+
+  const estimatedWaitMinutes =
+    queuePosition !== null
+      ? queuePosition * 4
+      : null;
+
+  appState.liveQueue = {
+    nowPlaying: nowPlaying
+      ? {
+          title: nowPlaying.song_title,
+          artist: nowPlaying.artist || "",
+        }
+      : {
+          title: "Nothing currently playing",
+          artist: "",
+        },
+
+    upNext: queue.slice(0, 5).map((request) => ({
+      title: request.song_title,
+      artist: request.artist || "",
+    })),
+
+    request: {
+      title: customerRequest.song_title,
+      position: queuePosition,
+      estimatedWaitMinutes,
+      status: customerRequest.status,
+    },
+  };
+
+  localStorage.removeItem("songrushPendingRequest");
+
+  renderLiveQueue();
+}
+
+function showLiveQueueScreen(song = null) {
+  appState.currentView = "liveQueue";
+
+  const pendingRequest = getPendingRequestDetails();
+
+  appState.liveQueue.request = {
+    title:
+      song?.title ||
+      pendingRequest?.title ||
+      "Finding your request...",
+    position: null,
+    estimatedWaitMinutes: null,
+    status: "processing",
+  };
 
   landingPage.hidden = true;
   songSearchPage.hidden = true;
@@ -471,11 +663,12 @@ function showLiveQueueScreen(song) {
 
   renderSessionUi();
   renderLiveQueue();
+  loadCustomerLiveQueueFromSupabase();
 }
+
 function showSuccessScreen(song) {
   showLiveQueueScreen(song);
 }
-
 function renderSongs(filter = "") {
   const query = filter.trim().toLowerCase();
   const visibleSongs = appState.songs.filter((song) => {
@@ -671,45 +864,83 @@ function renderQueue() {
   });
 }
 
+
 function renderLiveQueue() {
   const { liveQueue } = appState;
 
-  nowPlayingTitle.textContent = liveQueue.nowPlaying.title;
-  nowPlayingArtist.textContent = liveQueue.nowPlaying.artist;
+  nowPlayingTitle.textContent =
+    liveQueue.nowPlaying?.title ||
+    "Nothing currently playing";
+
+  nowPlayingArtist.textContent =
+    liveQueue.nowPlaying?.artist || "";
 
   upNextList.innerHTML = "";
-  liveQueue.upNext.forEach((item, index) => {
-    const listItem = document.createElement("li");
-    listItem.className = "up-next-item";
 
-    const number = document.createElement("span");
-    number.className = "up-next-number";
-    number.textContent = index + 1;
+  if (!liveQueue.upNext || liveQueue.upNext.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "up-next-item";
+    emptyItem.textContent =
+      "No songs are waiting in the queue.";
 
-    const details = document.createElement("div");
-    details.className = "up-next-details";
+    upNextList.appendChild(emptyItem);
+  } else {
+    liveQueue.upNext.forEach((item, index) => {
+      const listItem = document.createElement("li");
+      listItem.className = "up-next-item";
 
-    const title = document.createElement("div");
-    title.className = "up-next-title";
-    title.textContent = item.title;
+      const number = document.createElement("span");
+      number.className = "up-next-number";
+      number.textContent = index + 1;
 
-    const artist = document.createElement("div");
-    artist.className = "up-next-artist";
-    artist.textContent = item.artist;
+      const details = document.createElement("div");
+      details.className = "up-next-details";
 
-    details.appendChild(title);
-    details.appendChild(artist);
+      const title = document.createElement("div");
+      title.className = "up-next-title";
+      title.textContent = item.title;
 
-    listItem.appendChild(number);
-    listItem.appendChild(details);
-    upNextList.appendChild(listItem);
-  });
+      const artist = document.createElement("div");
+      artist.className = "up-next-artist";
+      artist.textContent = item.artist || "";
 
-  requestedSongTitle.textContent = liveQueue.request.title;
-  queuePosition.textContent = `#${liveQueue.request.position}`;
-  estimatedWait.textContent = `${liveQueue.request.estimatedWaitMinutes} Minutes`;
+      details.appendChild(title);
+      details.appendChild(artist);
+
+      listItem.appendChild(number);
+      listItem.appendChild(details);
+      upNextList.appendChild(listItem);
+    });
+  }
+
+  requestedSongTitle.textContent =
+    liveQueue.request?.title ||
+    "Finding your request...";
+
+  if (liveQueue.request?.status === "playing") {
+    queuePosition.textContent = "Now Playing";
+    estimatedWait.textContent = "0 Minutes";
+    return;
+  }
+
+  if (liveQueue.request?.status === "completed") {
+    queuePosition.textContent = "Played";
+    estimatedWait.textContent = "Completed";
+    return;
+  }
+
+  if (liveQueue.request?.position === null) {
+    queuePosition.textContent = "Processing";
+    estimatedWait.textContent = "Please wait...";
+    return;
+  }
+
+  queuePosition.textContent =
+    `#${liveQueue.request.position}`;
+
+  estimatedWait.textContent =
+    `${liveQueue.request.estimatedWaitMinutes} Minutes`;
 }
-
 function startNewSession() {
   const newCode = `SR-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
@@ -799,11 +1030,33 @@ async function loadSongs() {
   }
 }
 
-renderSessionUi();
-renderQueue();
-renderLiveQueue();
-loadNowPlayingFromSupabase();
-loadPlayedTonightFromSupabase();
-loadSongs();
-loadRequestsFromSupabase();
-subscribeToQueueChanges();
+async function initialiseApp() {
+  renderSessionUi();
+  renderQueue();
+  renderLiveQueue();
+
+  await loadNowPlayingFromSupabase();
+  await loadPlayedTonightFromSupabase();
+  await loadSongs();
+  await loadRequestsFromSupabase();
+
+  subscribeToQueueChanges();
+
+  const urlParams = new URLSearchParams(
+    window.location.search
+  );
+
+  const paymentStatus = urlParams.get("payment");
+
+  if (paymentStatus === "success") {
+    showLiveQueueScreen();
+
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }
+}
+
+initialiseApp();
