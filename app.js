@@ -373,11 +373,14 @@ function showDashboard() {
 
 function showRequestModal(song) {
   appState.selectedSong = song;
+
+  const modalTitle = document.getElementById("modalTitle");
+  const modalArtist = document.getElementById("modalArtist");
+
   modalTitle.textContent = song.title;
   modalArtist.textContent = song.artist;
   requestModal.classList.remove("hidden");
 }
-
 function closeModal() {
   requestModal.classList.add("hidden");
   appState.selectedSong = null;
