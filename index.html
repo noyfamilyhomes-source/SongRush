@@ -34,9 +34,10 @@
 
     <div id="requestModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-card">
-            <h3 id="modalTitle">Song Title</h3>
- <div class="modal-options">
-    <button class="modal-option" data-option="standard">
+  <h3 id="modalTitle">Song Title</h3>
+<p id="modalArtist" class="song-artist"></p>
+
+<div class="modal-options">  <button class="modal-option" data-option="standard">
         🎵 Standard Request<br><span>$5</span>
     </button>
 
@@ -148,14 +149,17 @@
         hidden
     >
         Finish Current Song
-    
+    </button>
 </section>
-
 
             <div class="queue-section">
                 <h3>Queue</h3>
                 <div id="queueList" class="queue-list"></div>
             </div>
+            <div class="queue-section">
+    <h3>Played Tonight</h3>
+    <div id="playedTonightList" class="queue-list"></div>
+</div>
         </div>
     </div>
 
