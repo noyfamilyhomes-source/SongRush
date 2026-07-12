@@ -1,14 +1,24 @@
-import { isSupabaseConfigured, supabase } from "./supabase.js";
 function getRequestTypeDetails(optionValue) {
   const requestTypes = {
-    standard: { label: "Standard Request", price: "$2", amount: 2 },
-double: { label: "Double Request", price: "$10", amount: 10 },
-priority: { label: "Jump the Queue", price: "$15", amount: 15 }
+    standard: {
+      label: "Standard Request",
+      price: "$5",
+      amount: 5
+    },
+    replay: {
+      label: "Play It Again",
+      price: "$20",
+      amount: 20
+    },
+    jump: {
+      label: "Jump the Queue",
+      price: "$15",
+      amount: 15
+    }
   };
 
   return requestTypes[optionValue] || requestTypes.standard;
 }
-
 async function startStripeCheckout(song, optionValue) {
   const requestDetails = getRequestTypeDetails(optionValue);
 
