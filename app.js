@@ -30,8 +30,20 @@ async function startStripeCheckout(song, optionValue) {
           .toString(36)
           .slice(2)}`;
 
-  localStorage.setItem("songrushRequestToken", requestToken);
+const existingRequestTokens = JSON.parse(
+  localStorage.getItem("songrushRequestTokens") || "[]"
+);
 
+const updatedRequestTokens = [
+  ...new Set([...existingRequestTokens, requestToken]),
+];
+
+localStorage.setItem(
+  "songrushRequestTokens",
+  JSON.stringify(updatedRequestTokens)
+);
+
+localStorage.setItem("songrushRequestToken", requestToken);
   localStorage.setItem(
     "songrushPendingRequest",
     JSON.stringify({
@@ -67,7 +79,6 @@ async function startStripeCheckout(song, optionValue) {
   if (!response.ok || !data.url) {
     localStorage.removeItem("songrushRequestToken");
     localStorage.removeItem("songrushPendingRequest");
-
     throw new Error(
       data.error || "Unable to start Stripe checkout"
     );
@@ -130,12 +141,7 @@ const appState = {
       { title: "Sweet Child O' Mine", artist: "Guns N' Roses" },
     ],
 
-    request: {
-      title: "Wonderwall",
-      position: 7,
-      estimatedWaitMinutes: 23,
-    },
-  },
+requests: [],  },
 };
 function getRequestsStatusLabel() {
   return appState.session.requestsOpen ? "Requests Open" : "Requests Closed";
@@ -483,18 +489,41 @@ function closeModal() {
   appState.selectedSong = null;
 }
 
-function getCurrentRequestToken() {
+function getCurrentRequestTokens() {
   const urlParams = new URLSearchParams(window.location.search);
   const tokenFromUrl = urlParams.get("request_token");
 
-  if (tokenFromUrl) {
-    localStorage.setItem("songrushRequestToken", tokenFromUrl);
-    return tokenFromUrl;
+  let savedTokens = [];
+
+  try {
+    savedTokens = JSON.parse(
+      localStorage.getItem("songrushRequestTokens") || "[]"
+    );
+  } catch (error) {
+    console.error("Unable to read saved request tokens", error);
+    savedTokens = [];
   }
 
-  return localStorage.getItem("songrushRequestToken");
-}
+  const legacyToken = localStorage.getItem("songrushRequestToken");
 
+  if (legacyToken) {
+    savedTokens.push(legacyToken);
+  }
+
+  if (tokenFromUrl) {
+    savedTokens.push(tokenFromUrl);
+    localStorage.setItem("songrushRequestToken", tokenFromUrl);
+  }
+
+  const uniqueTokens = [...new Set(savedTokens.filter(Boolean))];
+
+  localStorage.setItem(
+    "songrushRequestTokens",
+    JSON.stringify(uniqueTokens)
+  );
+
+  return uniqueTokens;
+}
 function getPendingRequestDetails() {
   const storedRequest = localStorage.getItem(
     "songrushPendingRequest"
@@ -517,22 +546,24 @@ function getPendingRequestDetails() {
 }
 
 async function loadCustomerLiveQueueFromSupabase() {
-  const requestToken = getCurrentRequestToken();
-  const pendingRequest = getPendingRequestDetails();
+const requestTokens = getCurrentRequestTokens();
+const pendingRequest = getPendingRequestDetails();
 
-  if (!requestToken || !isSupabaseConfigured || !supabase) {
+if (
+    requestTokens.length === 0 ||
+    !isSupabaseConfigured ||
+    !supabase
+) {
     return;
-  }
-
+}
   const { data: customerRequest, error: customerError } =
     await supabase
       .from("song_requests")
       .select(
         "id, session_id, song_title, artist, priority, amount, status,queue_order, request_token, created_at"
       )
-      .eq("request_token", requestToken)
-      .maybeSingle();
-
+.in("request_token", requestTokens)
+.order("created_at", { ascending: false });
   if (customerError) {
     console.error(
       "Unable to load customer request",
@@ -542,22 +573,17 @@ async function loadCustomerLiveQueueFromSupabase() {
     return;
   }
 
-  if (!customerRequest) {
-    appState.liveQueue.request = {
-      title:
-        pendingRequest?.title || "Finding your request...",
-      position: null,
-      estimatedWaitMinutes: null,
-      status: "processing",
-    };
+if (!customerRequest || customerRequest.length === 0) {
+    appState.liveQueue.requests = [];
 
     renderLiveQueue();
     return;
-  }
+}
 
-  if (customerRequest.session_id !== appState.session.id) {
-    appState.session.id = customerRequest.session_id;
-    renderSessionUi();
+  const customerRequests = customerRequest;
+  const latestRequest = customerRequests[0];
+if (latestRequest.session_id !== appState.session.id) {
+    appState.session.id = latestRequest.session_id;    renderSessionUi();
     subscribeToQueueChanges();
   }
 
@@ -567,7 +593,7 @@ const { data: pendingQueue, error: queueError } =
     .select(
       "id, song_title, artist, priority, amount, status, queue_order, created_at"
     )
-    .eq("session_id", customerRequest.session_id)
+    .eq("session_id", latestRequest.session_id)
     .eq("status", "pending")
     .order("queue_order", {
       ascending: true,
@@ -589,7 +615,7 @@ const { data: pendingQueue, error: queueError } =
     await supabase
       .from("song_requests")
       .select("id, song_title, artist, status, created_at")
-      .eq("session_id", customerRequest.session_id)
+      .eq("session_id", latestRequest.session_id)   
       .eq("status", "playing")
       .order("created_at", { ascending: false })
       .limit(1)
@@ -604,66 +630,66 @@ const { data: pendingQueue, error: queueError } =
     return;
   }
 
-  const queue = pendingQueue || [];
+const queue = pendingQueue || [];
 
-  const customerQueueIndex = queue.findIndex(
-    (request) => request.id === customerRequest.id
+const mappedCustomerRequests = customerRequests.map((request) => {
+  const queueIndex = queue.findIndex(
+    (queueItem) => queueItem.id === request.id
   );
 
-  const queuePosition =
-    customerQueueIndex >= 0
-      ? customerQueueIndex + 1
-      : null;
-
-  const estimatedWaitMinutes =
-    queuePosition !== null
-      ? queuePosition * 4
-      : null;
-
-  appState.liveQueue = {
-    nowPlaying: nowPlaying
-      ? {
-          title: nowPlaying.song_title,
-          artist: nowPlaying.artist || "",
-        }
-      : {
-          title: "Nothing currently playing",
-          artist: "",
-        },
-
-    upNext: queue.slice(0, 5).map((request) => ({
-      title: request.song_title,
-      artist: request.artist || "",
-    })),
-
-    request: {
-      title: customerRequest.song_title,
-      position: queuePosition,
-      estimatedWaitMinutes,
-      status: customerRequest.status,
-    },
+  return {
+    id: request.id,
+    title: request.song_title,
+    artist: request.artist || "",
+    status: request.status,
+    position: queueIndex >= 0 ? queueIndex + 1 : null,
+    estimatedWaitMinutes:
+      queueIndex >= 0 ? (queueIndex + 1) * 4 : null,
   };
+});
 
-  localStorage.removeItem("songrushPendingRequest");
+appState.liveQueue = {
+  nowPlaying: nowPlaying
+    ? {
+        title: nowPlaying.song_title,
+        artist: nowPlaying.artist || "",
+      }
+    : {
+        title: "Nothing currently playing",
+        artist: "",
+      },
 
-  renderLiveQueue();
+  upNext: queue.slice(0, 5).map((request) => ({
+    title: request.song_title,
+    artist: request.artist || "",
+  })),
+
+  requests: mappedCustomerRequests,
+};
+
+localStorage.removeItem("songrushPendingRequest");
+renderLiveQueue();
 }
-
 function showLiveQueueScreen(song = null) {
   appState.currentView = "liveQueue";
 
   const pendingRequest = getPendingRequestDetails();
 
-  appState.liveQueue.request = {
+appState.liveQueue.requests = [
+  {
     title:
       song?.title ||
       pendingRequest?.title ||
       "Finding your request...",
+    artist:
+      song?.artist ||
+      pendingRequest?.artist ||
+      "",
     position: null,
     estimatedWaitMinutes: null,
     status: "processing",
-  };
-
+  },
+];
   landingPage.hidden = true;
   songSearchPage.hidden = true;
   dashboardPage.classList.add("hidden");
@@ -1002,35 +1028,102 @@ function renderLiveQueue() {
     });
   }
 
-  requestedSongTitle.textContent =
-    liveQueue.request?.title || "Finding your request...";
+  const myRequestsList =
+    document.getElementById("myRequestsList");
 
-  if (liveQueue.request?.status === "playing") {
-    queuePosition.textContent = "Now Playing";
-    estimatedWait.textContent = "0 Minutes";
+  if (!myRequestsList) {
     return;
   }
 
-  if (liveQueue.request?.status === "completed") {
-    queuePosition.textContent = "Played";
-    estimatedWait.textContent = "Completed";
+  myRequestsList.innerHTML = "";
+
+  const customerRequests = liveQueue.requests || [];
+
+  if (customerRequests.length === 0) {
+    myRequestsList.innerHTML =
+      '<p class="empty-state">You have no requests yet.</p>';
     return;
   }
 
-  if (liveQueue.request?.position === null) {
-    queuePosition.textContent = "Processing";
-    estimatedWait.textContent = "Please wait...";
-    return;
-  }
+  customerRequests.forEach((request) => {
+    const requestCard = document.createElement("div");
+    requestCard.className = "request-highlight";
 
-  queuePosition.textContent =
-    `#${liveQueue.request.position}`;
+    const badge = document.createElement("div");
+    badge.className = "music-badge";
+    badge.textContent = "🎵";
 
-  estimatedWait.textContent =
-    `${liveQueue.request.estimatedWaitMinutes} Minutes`;
+    const details = document.createElement("div");
+    details.className = "request-details";
+
+    const title = document.createElement("h3");
+    title.textContent = request.title;
+
+    const artist = document.createElement("p");
+    artist.className = "song-artist";
+    artist.textContent = request.artist || "";
+
+    const positionRow = document.createElement("p");
+    positionRow.className = "request-stat";
+
+    const positionLabel = document.createElement("span");
+    positionLabel.className = "stat-label";
+    positionLabel.textContent = "Queue Position";
+
+    const positionValue = document.createElement("span");
+    positionValue.className = "stat-value";
+
+    const waitRow = document.createElement("p");
+    waitRow.className = "request-stat";
+
+    const waitLabel = document.createElement("span");
+    waitLabel.className = "stat-label";
+    waitLabel.textContent = "Estimated Wait";
+
+    const waitValue = document.createElement("span");
+    waitValue.className = "stat-value";
+
+    if (request.status === "playing") {
+      positionValue.textContent = "Now Playing";
+      waitValue.textContent = "0 Minutes";
+    } else if (request.status === "completed") {
+      positionValue.textContent = "Played";
+      waitValue.textContent = "Completed";
+    } else if (
+      request.status === "processing" ||
+      request.position === null
+    ) {
+      positionValue.textContent = "Processing";
+      waitValue.textContent = "Please wait...";
+    } else {
+      positionValue.textContent = `#${request.position}`;
+      waitValue.textContent =
+        `${request.estimatedWaitMinutes} Minutes`;
+    }
+
+    positionRow.appendChild(positionLabel);
+    positionRow.appendChild(positionValue);
+
+    waitRow.appendChild(waitLabel);
+    waitRow.appendChild(waitValue);
+
+    details.appendChild(title);
+
+    if (request.artist) {
+      details.appendChild(artist);
+    }
+
+    details.appendChild(positionRow);
+    details.appendChild(waitRow);
+
+    requestCard.appendChild(badge);
+    requestCard.appendChild(details);
+
+    myRequestsList.appendChild(requestCard);
+  });
 }
 
-function startNewSession() {
+  function startNewSession() {
   const newCode = `SR-${String(
     Math.floor(Math.random() * 9000) + 1000
   )}`;
@@ -1054,13 +1147,8 @@ function startNewSession() {
       artist: "",
     },
     upNext: [],
-    request: {
-      title: "Waiting for your first request",
-      position: null,
-      estimatedWaitMinutes: null,
-      status: "processing",
-    },
-  };
+
+requests: [],  };
 
   renderQueue();
   renderLiveQueue();
@@ -1136,10 +1224,13 @@ async function initialiseApp() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const paymentStatus = urlParams.get("payment");
-  const savedRequestToken = localStorage.getItem("songrushRequestToken");
+const savedRequestTokens = getCurrentRequestTokens();
 
-  if (paymentStatus === "success" || savedRequestToken) {
-    showLiveQueueScreen();
+if (
+  paymentStatus === "success" ||
+  savedRequestTokens.length > 0
+) {
+      showLiveQueueScreen();
 
     window.history.replaceState(
       {},
