@@ -406,12 +406,15 @@ function showDashboard() {
   liveQueuePage.classList.add("hidden");
   successScreen.classList.add("hidden");
   requestModal.classList.add("hidden");
+
   renderSessionUi();
   renderQueue();
+
   loadRequestsFromSupabase();
+  loadNowPlayingFromSupabase();
+  loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
 }
-
 function showRequestModal(song) {
   appState.selectedSong = song;
 
