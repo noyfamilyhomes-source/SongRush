@@ -1,3 +1,4 @@
+import { isSupabaseConfigured, supabase } from "./supabase.js";
 function getRequestTypeDetails(optionValue) {
   const requestTypes = {
     standard: {
@@ -63,10 +64,10 @@ const appState = {
   currentView: "landing",
 
   queue: [
-    { id: 1, title: "Wonderwall", artist: "Oasis", type: "Standard", price: "$2" },
-    { id: 2, title: "Horses", artist: "Daryl Braithwaite", type: "Priority", price: "$10" },
-    { id: 3, title: "Sweet Child O' Mine", artist: "Guns N' Roses", type: "Jump Queue", price: "$15" }
-  ],
+{ id: 1, title: "Wonderwall", artist: "Oasis", type: "Standard Request", price: "$5" },
+{ id: 2, title: "Horses", artist: "Daryl Braithwaite", type: "Play It Again", price: "$20" },
+{ id: 3, title: "Sweet Child O' Mine", artist: "Guns N' Roses", type: "Jump the Queue", price: "$15" }
+],
 
   liveQueue: {
     nowPlaying: {
@@ -246,22 +247,21 @@ function subscribeToQueueChanges() {
 }
 const REQUEST_PRICING = {
   standard: {
-    label: "Standard",
-    price: "$2",
-    amount: 2,
+    label: "Standard Request",
+    price: "$5",
+    amount: 5,
   },
-  priority: {
-    label: "Priority",
-    price: "$10",
-    amount: 10,
+  replay: {
+    label: "Play It Again",
+    price: "$20",
+    amount: 20,
   },
   jump: {
-    label: "Jump Queue",
+    label: "Jump the Queue",
     price: "$15",
     amount: 15,
   },
 };
-
 
 
 
@@ -397,8 +397,13 @@ function showLiveQueueScreen(song) {
 
   const alreadyQueued = appState.queue.some((entry) => entry.title === song.title && entry.artist === song.artist);
   if (!alreadyQueued) {
-    appState.queue.unshift({ id: Date.now(), title: song.title, artist: song.artist, type: "Standard", price: "$2" });
-  }
+  appState.queue.unshift({
+    id: Date.now(),
+    title: song.title,
+    artist: song.artist,
+    type: "Standard Request",
+    price: "$5"
+});}
 
   landingPage.hidden = true;
   songSearchPage.hidden = true;
@@ -454,7 +459,7 @@ function renderSongs(filter = "") {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "request-btn";
-    button.textContent = "Request $2";
+    button.textContent = "Request $5";
     button.addEventListener("click", () => {
       showRequestModal(song);
     });
