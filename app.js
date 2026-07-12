@@ -171,14 +171,16 @@ async function loadRequestsFromSupabase() {
 async function loadNowPlayingFromSupabase() {
   const titleEl = document.getElementById("now-playing-title");
   const artistEl = document.getElementById("now-playing-artist");
+  const finishBtn = document.getElementById("finishCurrentSongBtn");
 
-  if (!titleEl || !artistEl) {
+  if (!titleEl || !artistEl || !finishBtn) {
     return;
   }
 
   if (!isSupabaseConfigured || !supabase || !appState.session) {
     titleEl.textContent = "Nothing currently playing";
     artistEl.textContent = "";
+    finishBtn.hidden = true;
     return;
   }
 
@@ -199,11 +201,13 @@ async function loadNowPlayingFromSupabase() {
   if (!data) {
     titleEl.textContent = "Nothing currently playing";
     artistEl.textContent = "";
+    finishBtn.hidden = true;
     return;
   }
 
   titleEl.textContent = data.song_title;
   artistEl.textContent = data.artist || "";
+  finishBtn.hidden = false;
 }
 function subscribeToQueueChanges() {
   if (!isSupabaseConfigured || !supabase) {
@@ -663,7 +667,35 @@ toggleRequestsBtn.addEventListener("click", () => {
 });
 
 startNewSessionBtn.addEventListener("click", startNewSession);
+const finishCurrentSongBtn = document.getElementById("finishCurrentSongBtn");
 
+finishCurrentSongBtn.addEventListener("click", async () => {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+
+  finishCurrentSongBtn.disabled = true;
+  finishCurrentSongBtn.textContent = "Finishing...";
+
+  const { error } = await supabase
+    .from("song_requests")
+    .update({ status: "completed" })
+    .eq("session_id", appState.session.id)
+    .eq("status", "playing");
+
+  if (error) {
+    console.error("Unable to finish current song", error);
+    finishCurrentSongBtn.disabled = false;
+    finishCurrentSongBtn.textContent = "Finish Current Song";
+    return;
+  }
+
+  await loadNowPlayingFromSupabase();
+  await loadRequestsFromSupabase();
+
+  finishCurrentSongBtn.disabled = false;
+  finishCurrentSongBtn.textContent = "Finish Current Song";
+});
 async function loadSongs() {
   try {
     const response = await fetch("songs.json");
