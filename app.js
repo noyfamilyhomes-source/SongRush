@@ -220,6 +220,58 @@ async function loadNowPlayingFromSupabase() {
   artistEl.textContent = data.artist || "";
   finishBtn.hidden = false;
 }
+async function loadPlayedTonightFromSupabase() {
+  const playedTonightList = document.getElementById("playedTonightList");
+
+  if (!playedTonightList) {
+    return;
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    playedTonightList.innerHTML =
+      '<p class="empty-state">No songs played tonight.</p>';
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("song_requests")
+    .select("id, song_title, artist, priority, amount, status, created_at")
+    .eq("session_id", appState.session.id)
+    .eq("status", "completed")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Unable to load played songs", error);
+    playedTonightList.innerHTML =
+      '<p class="empty-state">Unable to load played songs.</p>';
+    return;
+  }
+
+  playedTonightList.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    playedTonightList.innerHTML =
+      '<p class="empty-state">No songs played tonight.</p>';
+    return;
+  }
+
+  data.forEach((song) => {
+    const playedItem = document.createElement("div");
+    playedItem.className = "queue-item";
+
+    const title = document.createElement("div");
+    title.className = "queue-item-title";
+    title.textContent = `${song.song_title} – ${song.artist || "Unknown Artist"}`;
+
+    const meta = document.createElement("div");
+    meta.className = "queue-item-meta";
+    meta.textContent = song.priority || "Completed";
+
+    playedItem.appendChild(title);
+    playedItem.appendChild(meta);
+    playedTonightList.appendChild(playedItem);
+  });
+}
 function subscribeToQueueChanges() {
   if (!isSupabaseConfigured || !supabase) {
     return;
@@ -568,8 +620,9 @@ markPlayedBtn.addEventListener("click", async () => {
       return;
     }
 
-    await loadRequestsFromSupabase();
-    await loadNowPlayingFromSupabase();
+   await loadNowPlayingFromSupabase();
+await loadRequestsFromSupabase();
+await loadPlayedTonightFromSupabase();
     return;
   }
 
@@ -732,6 +785,7 @@ renderSessionUi();
 renderQueue();
 renderLiveQueue();
 loadNowPlayingFromSupabase();
+loadPlayedTonightFromSupabase();
 loadSongs();
 loadRequestsFromSupabase();
 subscribeToQueueChanges();
