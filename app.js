@@ -793,7 +793,25 @@ button.textContent = hasBeenPlayed
   ? "🔁 Play It Again — $20"
   : "🎵 Request Song — $5";
 
-button.addEventListener("click", () => {
+button.addEventListener("click", async () => {
+  if (hasBeenPlayed) {
+    button.disabled = true;
+    button.textContent = "Opening Payment...";
+
+    try {
+      await startStripeCheckout(song, "replay");
+    } catch (error) {
+      console.error("Replay checkout failed", error);
+
+      button.disabled = false;
+      button.textContent = "🔁 Play It Again — $20";
+
+      alert("Payment could not start. Please try again.");
+    }
+
+    return;
+  }
+
   showRequestModal(song);
 });    row.appendChild(details);
     row.appendChild(button);
