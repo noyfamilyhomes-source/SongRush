@@ -456,6 +456,33 @@ async function saveRequestToSupabase(song, optionValue) {
 
     renderQueue();
   }
+}async function loadSessionSettingsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("songrush_sessions")
+    .select("allow_repeats")
+    .eq("session_id", appState.session.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Unable to load session settings", error);
+    return;
+  }
+
+  if (!data) {
+    return;
+  }
+
+  appState.session.allowRepeats = data.allow_repeats;
+
+  renderSessionUi();
+
+  if (appState.currentView === "songSearch") {
+    renderSongs(songSearchInput.value);
+  }
 }
 function renderSessionUi() {
   renderSessionSummaries();
@@ -1331,7 +1358,8 @@ async function initialiseApp() {
   renderSessionUi();
   renderQueue();
   renderLiveQueue();
-
+  
+  await loadSessionSettingsFromSupabase();
   await loadNowPlayingFromSupabase();
   await loadPlayedTonightFromSupabase();
   await loadSongs();
