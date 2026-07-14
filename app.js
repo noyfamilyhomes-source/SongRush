@@ -821,7 +821,7 @@ function renderSongs(filter = "") {
     button.className = "request-btn";
 
     if (hasBeenPlayed && !appState.session.allowRepeats) {
-      button.textContent = "🚫 Repeats Disabled Tonight";
+      button.textContent = "🚫 Repeats Off";      
       button.disabled = true;
     } else if (hasBeenPlayed) {
       button.textContent = "🔁 Play It Again — $20";
@@ -833,8 +833,8 @@ function renderSongs(filter = "") {
         await loadSessionSettingsFromSupabase();
 
         if (!appState.session.allowRepeats) {
-          button.textContent = "🚫 Repeats Disabled Tonight";
-          button.disabled = true;
+        button.textContent = "🚫 Repeats Off";          
+        button.disabled = true;
           return;
         }
 
