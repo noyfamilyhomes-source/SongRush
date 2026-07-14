@@ -631,3 +631,99 @@ input {
   margin-top: 6px;
   color: #bdbdbd;
 }
+/* Sprint 7.2 — Customer song list polish */
+
+.song-search-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.song-list {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px 6px 2px 2px;
+    scrollbar-gutter: stable;
+}
+
+.song-item {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition:
+        border-color 180ms ease,
+        background 180ms ease,
+        transform 180ms ease;
+}
+
+.song-item:hover {
+    background: rgba(255, 255, 255, 0.085);
+    border-color: rgba(157, 92, 255, 0.3);
+}
+
+.song-details {
+    min-width: 0;
+}
+
+.song-title,
+.song-artist,
+.song-genre {
+    overflow-wrap: anywhere;
+}
+
+.request-btn {
+    flex: 0 0 190px;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.25;
+    text-align: center;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+button:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.request-btn:disabled {
+    background: rgba(255, 255, 255, 0.09);
+    color: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 12px;
+    }
+
+    .song-search-card {
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .song-search-header {
+        align-items: flex-start;
+    }
+
+    .song-list {
+        gap: 10px;
+        padding-right: 2px;
+    }
+
+    .song-item {
+        padding: 14px;
+    }
+
+    .request-btn {
+        flex-basis: auto;
+        width: 100%;
+        min-height: 50px;
+    }
+}
