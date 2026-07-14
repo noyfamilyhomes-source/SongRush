@@ -96,16 +96,16 @@ const appState = {
     tableNumber: "Table 12",
     status: "LIVE",
     requestsOpen: true,
+    allowRepeats: true,
     startTime: "7:30 PM",
   },
 
   songs: [],
+  playedSongs: [],
   selectedSong: null,
   currentView: "landing",
 
-  queue: [
-    {
-      id: 1,
+  queue: [      id: 1,
       title: "Wonderwall",
       artist: "Oasis",
       type: "Standard Request",
@@ -177,9 +177,24 @@ function renderDashboardSession() {
   dashboardTable.textContent = appState.session.tableNumber || "—";
   dashboardStatusBadge.textContent = appState.session.status;
   toggleRequestsBtn.textContent = getRequestsStatusLabel();
-  toggleRequestsBtn.classList.toggle("closed", !appState.session.requestsOpen);
-  toggleRequestsBtn.classList.toggle("open", appState.session.requestsOpen);
+toggleRequestsBtn.classList.toggle("closed", !appState.session.requestsOpen);
+toggleRequestsBtn.classList.toggle("open", appState.session.requestsOpen);
+
+allowRepeatsBtn.textContent = appState.session.allowRepeats
+  ? "Repeats Tonight: Allowed"
+  : "Repeats Tonight: Disabled";
+
+allowRepeatsBtn.classList.toggle(
+  "closed",
+  !appState.session.allowRepeats
+);
+
+allowRepeatsBtn.classList.toggle(
+  "open",
+  appState.session.allowRepeats
+);
 }
+
 
 function showBackendWarning(show) {
   if (!backendWarning) {
@@ -188,7 +203,8 @@ function showBackendWarning(show) {
 
   backendWarning.classList.toggle("hidden", !show);
 }
- function mapSupabaseRequestToQueueItem(request) {
+
+function mapSupabaseRequestToQueueItem(request) {
   return {
     id: request.id,
     title: request.song_title,
@@ -307,15 +323,22 @@ async function loadPlayedTonightFromSupabase() {
     .eq("status", "completed")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Unable to load played songs", error);
-    playedTonightList.innerHTML =
-      '<p class="empty-state">Unable to load played songs.</p>';
-    return;
-  }
+if (error) {
+  console.error("Unable to load played songs", error);
+  playedTonightList.innerHTML =
+    '<p class="empty-state">Unable to load played songs.</p>';
+
+  appState.playedSongs = [];
+
+  return;
+}
+
+appState.playedSongs = (data || []).map((song) => ({
+  title: song.song_title,
+  artist: song.artist || "",
+}));
 
   playedTonightList.innerHTML = "";
-
   if (!data || data.length === 0) {
     playedTonightList.innerHTML =
       '<p class="empty-state">No songs played tonight.</p>';
@@ -467,22 +490,6 @@ function showDashboard() {
   loadNowPlayingFromSupabase();
   loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
-}
-function showRequestModal(song) {
-  appState.selectedSong = song;
-
-  const modalTitle = document.getElementById("modalTitle");
-  const modalArtist = document.getElementById("modalArtist");
-
-  if (modalTitle) {
-    modalTitle.textContent = song.title;
-  }
-
-  if (modalArtist) {
-    modalArtist.textContent = song.artist || "";
-  }
-
-  requestModal.classList.remove("hidden");
 }
 function closeModal() {
   requestModal.classList.add("hidden");
@@ -743,15 +750,23 @@ function renderSongs(filter = "") {
     details.appendChild(artist);
     details.appendChild(genre);
 
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "request-btn";
-    button.textContent = "Request $5";
-    button.addEventListener("click", () => {
-      showRequestModal(song);
-    });
+const hasBeenPlayed = appState.playedSongs.some(
+  (playedSong) =>
+    playedSong.title === song.title &&
+    playedSong.artist === song.artist
+);
 
-    row.appendChild(details);
+const button = document.createElement("button");
+button.type = "button";
+button.className = "request-btn";
+
+button.textContent = hasBeenPlayed
+  ? "🔁 Play It Again — $20"
+  : "🎵 Request Song — $5";
+
+button.addEventListener("click", () => {
+  showRequestModal(song);
+});    row.appendChild(details);
     row.appendChild(button);
     songList.appendChild(row);
   });
@@ -764,6 +779,7 @@ homeFromSearchBtn.addEventListener("click", showLandingPage);
 
 const browseMoreSongsBtn = document.getElementById("browseMoreBtn");
 const returnHomeBtn = document.getElementById("returnHomeBtn");
+const allowRepeatsBtn = document.getElementById("allowRepeatsBtn");
 
 if (browseMoreSongsBtn) {
   browseMoreSongsBtn.addEventListener("click", showSongList);
@@ -1123,7 +1139,7 @@ function renderLiveQueue() {
   });
 }
 
-  function startNewSession() {
+function startNewSession() {
   const newCode = `SR-${String(
     Math.floor(Math.random() * 9000) + 1000
   )}`;
@@ -1132,6 +1148,7 @@ function renderLiveQueue() {
     ...appState.session,
     id: newCode,
     requestsOpen: true,
+    allowRepeats: true,
     status: "LIVE",
     startTime: new Date().toLocaleTimeString([], {
       hour: "numeric",
@@ -1140,6 +1157,7 @@ function renderLiveQueue() {
   };
 
   appState.queue = [];
+  appState.playedSongs = [];
 
   appState.liveQueue = {
     nowPlaying: {
@@ -1147,8 +1165,8 @@ function renderLiveQueue() {
       artist: "",
     },
     upNext: [],
-
-requests: [],  };
+    requests: [],
+  };
 
   renderQueue();
   renderLiveQueue();
@@ -1162,6 +1180,16 @@ requests: [],  };
 toggleRequestsBtn.addEventListener("click", () => {
   appState.session.requestsOpen = !appState.session.requestsOpen;
   renderSessionUi();
+});
+
+allowRepeatsBtn.addEventListener("click", () => {
+  appState.session.allowRepeats = !appState.session.allowRepeats;
+
+  renderSessionUi();
+
+  if (appState.currentView === "songSearch") {
+    renderSongs(songSearchInput.value);
+  }
 });
 
 startNewSessionBtn.addEventListener("click", startNewSession);
