@@ -176,25 +176,33 @@ function renderDashboardSession() {
   dashboardStartTime.textContent = appState.session.startTime;
   dashboardTable.textContent = appState.session.tableNumber || "—";
   dashboardStatusBadge.textContent = appState.session.status;
+
   toggleRequestsBtn.textContent = getRequestsStatusLabel();
-toggleRequestsBtn.classList.toggle("closed", !appState.session.requestsOpen);
-toggleRequestsBtn.classList.toggle("open", appState.session.requestsOpen);
+  toggleRequestsBtn.classList.toggle(
+    "closed",
+    !appState.session.requestsOpen
+  );
+  toggleRequestsBtn.classList.toggle(
+    "open",
+    appState.session.requestsOpen
+  );
 
-allowRepeatsBtn.textContent = appState.session.allowRepeats
-  ? "Repeats Tonight: Allowed"
-  : "Repeats Tonight: Disabled";
+  if (allowRepeatsBtn) {
+    allowRepeatsBtn.textContent = appState.session.allowRepeats
+      ? "Repeats Tonight: Allowed"
+      : "Repeats Tonight: Disabled";
 
-allowRepeatsBtn.classList.toggle(
-  "closed",
-  !appState.session.allowRepeats
-);
+    allowRepeatsBtn.classList.toggle(
+      "closed",
+      !appState.session.allowRepeats
+    );
 
-allowRepeatsBtn.classList.toggle(
-  "open",
-  appState.session.allowRepeats
-);
+    allowRepeatsBtn.classList.toggle(
+      "open",
+      appState.session.allowRepeats
+    );
+  }
 }
-
 
 function showBackendWarning(show) {
   if (!backendWarning) {
@@ -772,14 +780,54 @@ button.addEventListener("click", () => {
   });
 }
 
-joinButton.addEventListener("click", showSongList);
-dashboardButton.addEventListener("click", showDashboard);
-backToLandingBtn.addEventListener("click", showLandingPage);
-homeFromSearchBtn.addEventListener("click", showLandingPage);
+const landingPage = document.getElementById("landingPage");
+const songSearchPage = document.getElementById("songSearchPage");
+const dashboardPage = document.getElementById("dashboardPage");
+const liveQueuePage = document.getElementById("liveQueuePage");
+const successScreen = document.getElementById("successScreen");
+const requestModal = document.getElementById("requestModal");
 
+const joinButton = document.getElementById("joinButton");
+const dashboardButton = document.getElementById("dashboardButton");
+const backToLandingBtn = document.getElementById("backToLandingBtn");
+const homeFromSearchBtn = document.getElementById("homeFromSearchBtn");
 const browseMoreSongsBtn = document.getElementById("browseMoreBtn");
 const returnHomeBtn = document.getElementById("returnHomeBtn");
-const allowRepeatsBtn = document.getElementById("allowRepeatsBtn");
+const cancelRequestBtn = document.getElementById("cancelRequestBtn");
+
+const songSearchInput = document.getElementById("songSearchInput");
+const songList = document.getElementById("songList");
+
+const queueList = document.getElementById("queueList");
+const nowPlayingTitle = document.getElementById("nowPlayingTitle");
+const nowPlayingArtist = document.getElementById("nowPlayingArtist");
+const upNextList = document.getElementById("upNextList");
+
+const backendWarning = document.getElementById("backendWarning");
+const dashboardSessionName =
+  document.getElementById("dashboardSessionName");
+const dashboardSessionCode =
+  document.getElementById("dashboardSessionCode");
+const dashboardVenue = document.getElementById("dashboardVenue");
+const dashboardStartTime =
+  document.getElementById("dashboardStartTime");
+const dashboardTable = document.getElementById("dashboardTable");
+const dashboardStatusBadge =
+  document.getElementById("dashboardStatusBadge");
+const toggleRequestsBtn =
+  document.getElementById("toggleRequestsBtn");
+const startNewSessionBtn =
+  document.getElementById("startNewSessionBtn");
+const allowRepeatsBtn =
+  document.getElementById("allowRepeatsBtn");
+
+joinButton.addEventListener("click", showSongList);
+
+dashboardButton.addEventListener("click", showDashboard);
+
+backToLandingBtn.addEventListener("click", showLandingPage);
+
+homeFromSearchBtn.addEventListener("click", showLandingPage);
 
 if (browseMoreSongsBtn) {
   browseMoreSongsBtn.addEventListener("click", showSongList);
@@ -1182,16 +1230,17 @@ toggleRequestsBtn.addEventListener("click", () => {
   renderSessionUi();
 });
 
-allowRepeatsBtn.addEventListener("click", () => {
-  appState.session.allowRepeats = !appState.session.allowRepeats;
+if (allowRepeatsBtn) {
+  allowRepeatsBtn.addEventListener("click", () => {
+    appState.session.allowRepeats = !appState.session.allowRepeats;
 
-  renderSessionUi();
+    renderSessionUi();
 
-  if (appState.currentView === "songSearch") {
-    renderSongs(songSearchInput.value);
-  }
-});
-
+    if (appState.currentView === "songSearch") {
+      renderSongs(songSearchInput.value);
+    }
+  });
+}
 startNewSessionBtn.addEventListener("click", startNewSession);
 const finishCurrentSongBtn = document.getElementById("finishCurrentSongBtn");
 
