@@ -466,7 +466,8 @@ async function saveRequestToSupabase(song, optionValue) {
     .select("allow_repeats")
     .eq("session_id", appState.session.id)
     .maybeSingle();
-
+    console.log("Session:", appState.session.id);
+    console.log("Settings row:", data, error);
   if (error) {
     console.error("Unable to load session settings", error);
     return;
@@ -806,7 +807,7 @@ function renderSongs(filter = "") {
     details.appendChild(artist);
     details.appendChild(genre);
 
-const hasBeenPlayed = appState.playedSongs.some(
+});const hasBeenPlayed = appState.playedSongs.some(
   (playedSong) =>
     playedSong.title === song.title &&
     playedSong.artist === song.artist
@@ -816,35 +817,49 @@ const button = document.createElement("button");
 button.type = "button";
 button.className = "request-btn";
 
-button.textContent = hasBeenPlayed
-  ? "🔁 Play It Again — $20"
-  : "🎵 Request Song — $5";
+if (hasBeenPlayed && !appState.session.allowRepeats) {
+  button.textContent = "🚫 Repeats Disabled Tonight";
+  button.disabled = true;
+} else if (hasBeenPlayed) {
+  button.textContent = "🔁 Play It Again — $20";
 
 button.addEventListener("click", async () => {
-  if (hasBeenPlayed) {
+  button.disabled = true;
+  button.textContent = "Checking Repeats...";
+
+  await loadSessionSettingsFromSupabase();
+
+  if (!appState.session.allowRepeats) {
+    button.textContent = "🚫 Repeats Disabled Tonight";
     button.disabled = true;
-    button.textContent = "Opening Payment...";
-
-    try {
-      await startStripeCheckout(song, "replay");
-    } catch (error) {
-      console.error("Replay checkout failed", error);
-
-      button.disabled = false;
-      button.textContent = "🔁 Play It Again — $20";
-
-      alert("Payment could not start. Please try again.");
-    }
-
     return;
   }
 
-  showRequestModal(song);
-});    row.appendChild(details);
+  button.textContent = "Opening Payment...";
+
+  try {
+    await startStripeCheckout(song, "replay");
+  } catch (error) {
+    console.error("Replay checkout failed", error);
+
+    button.disabled = false;
+    button.textContent = "🔁 Play It Again — $20";
+
+    alert("Payment could not start. Please try again.");
+  }
+});
+
+} else {
+  button.textContent = "🎵 Request Song — $5";
+
+  button.addEventListener("click", () => {
+    showRequestModal(song);
+  });
+}    row.appendChild(details);
     row.appendChild(button);
     songList.appendChild(row);
-  });
-}
+  };
+
 
 const landingPage = document.getElementById("landingPage");
 const songSearchPage = document.getElementById("songSearchPage");
