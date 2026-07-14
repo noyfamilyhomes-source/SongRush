@@ -571,11 +571,34 @@ input {
     gap: 8px;
 }
 
-.queue-actions button {
-    padding: 8px 12px;
-    font-size: 14px;
+.queue-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
 }
 
+.queue-actions button {
+    flex: 0 0 auto;
+    min-width: 88px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 10px;
+}
+
+.queue-actions button:first-child {
+    min-width: 78px;
+}
+
+@media (max-width: 600px) {
+    .queue-actions button {
+        flex: 1 1 calc(50% - 8px);
+    }
+
+    .queue-actions button:first-child {
+        flex-basis: 100%;
+    }
+}
 @media (min-width: 700px) {
     .live-queue-actions {
         flex-direction: row;
