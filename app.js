@@ -502,6 +502,23 @@ function showDashboard() {
   loadNowPlayingFromSupabase();
   loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
+}function showRequestModal(song) {
+  if (!song || !requestModal || !modalTitle || !modalArtist) {
+    console.error("Unable to open request modal", {
+      song,
+      requestModal,
+      modalTitle,
+      modalArtist,
+    });
+    return;
+  }
+
+  appState.selectedSong = song;
+
+  modalTitle.textContent = song.title;
+  modalArtist.textContent = song.artist || "";
+
+  requestModal.classList.remove("hidden");
 }
 function closeModal() {
   requestModal.classList.add("hidden");
@@ -790,7 +807,8 @@ const dashboardPage = document.getElementById("dashboardPage");
 const liveQueuePage = document.getElementById("liveQueuePage");
 const successScreen = document.getElementById("successScreen");
 const requestModal = document.getElementById("requestModal");
-
+const modalTitle = document.getElementById("modalTitle");
+const modalArtist = document.getElementById("modalArtist");
 const joinButton = document.getElementById("joinButton");
 const dashboardButton = document.getElementById("dashboardButton");
 const backToLandingBtn = document.getElementById("backToLandingBtn");
