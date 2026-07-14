@@ -75,6 +75,36 @@ button:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 25px rgba(157, 92, 255, 0.22);
 }
+button:disabled {
+    cursor: wait;
+    opacity: 0.75;
+    transform: none;
+    box-shadow: none;
+}
+
+.request-btn.loading {
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.request-btn.loading::after {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-left: 10px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: songrush-spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes songrush-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 
 .landing-actions {
     display: flex;

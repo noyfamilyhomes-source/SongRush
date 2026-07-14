@@ -826,32 +826,33 @@ function renderSongs(filter = "") {
     } else if (hasBeenPlayed) {
       button.textContent = "🔁 Play It Again — $20";
 
-      button.addEventListener("click", async () => {
-        button.disabled = true;
-        button.textContent = "Checking Repeats...";
+   button.addEventListener("click", async () => {
+  button.disabled = true;
+  button.textContent = "Checking Repeats...";
 
-        await loadSessionSettingsFromSupabase();
+  await loadSessionSettingsFromSupabase();
 
-        if (!appState.session.allowRepeats) {
-        button.textContent = "🚫 Repeats Off";          
-        button.disabled = true;
-          return;
-        }
+  if (!appState.session.allowRepeats) {
+    button.textContent = "🚫 Repeats Off";
+    button.disabled = true;
+    return;
+  }
 
-        button.textContent = "Opening Payment...";
+  button.classList.remove("loading");
+  button.textContent = "Opening Payment...";
 
-        try {
-          await startStripeCheckout(song, "replay");
-        } catch (error) {
-          console.error("Replay checkout failed", error);
+  try {
+    await startStripeCheckout(song, "replay");
+  } catch (error) {
+    console.error("Replay checkout failed", error);
 
-          button.disabled = false;
-          button.textContent = "🔁 Play It Again — $20";
+    button.disabled = false;
+    button.textContent = "🔁 Play It Again — $20";
 
-          alert("Payment could not start. Please try again.");
-        }
-      });
-    } else {
+    alert("Payment could not start. Please try again.");
+  }
+});
+ } else {
       button.textContent = "🎵 Request Song — $5";
 
       button.addEventListener("click", () => {
