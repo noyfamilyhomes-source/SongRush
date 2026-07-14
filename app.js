@@ -1298,16 +1298,44 @@ toggleRequestsBtn.addEventListener("click", () => {
 });
 
 if (allowRepeatsBtn) {
-  allowRepeatsBtn.addEventListener("click", () => {
-    appState.session.allowRepeats = !appState.session.allowRepeats;
+  allowRepeatsBtn.addEventListener("click", async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      return;
+    }
+
+    const newAllowRepeatsValue = !appState.session.allowRepeats;
+
+    allowRepeatsBtn.disabled = true;
+    allowRepeatsBtn.textContent = "Saving...";
+
+    const { error } = await supabase
+      .from("songrush_sessions")
+      .update({
+        allow_repeats: newAllowRepeatsValue,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("session_id", appState.session.id);
+
+    if (error) {
+      console.error("Unable to update repeat setting", error);
+
+      allowRepeatsBtn.disabled = false;
+      renderSessionUi();
+      return;
+    }
+
+    appState.session.allowRepeats = newAllowRepeatsValue;
 
     renderSessionUi();
 
     if (appState.currentView === "songSearch") {
       renderSongs(songSearchInput.value);
     }
+
+    allowRepeatsBtn.disabled = false;
   });
 }
+
 startNewSessionBtn.addEventListener("click", startNewSession);
 const finishCurrentSongBtn = document.getElementById("finishCurrentSongBtn");
 
@@ -1358,7 +1386,7 @@ async function initialiseApp() {
   renderSessionUi();
   renderQueue();
   renderLiveQueue();
-  
+
   await loadSessionSettingsFromSupabase();
   await loadNowPlayingFromSupabase();
   await loadPlayedTonightFromSupabase();
