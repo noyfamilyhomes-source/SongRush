@@ -771,8 +771,11 @@ function showSuccessScreen(song) {
 }
 function renderSongs(filter = "") {
   const query = filter.trim().toLowerCase();
+
   const visibleSongs = appState.songs.filter((song) => {
-    const haystack = `${song.title} ${song.artist} ${song.genre}`.toLowerCase();
+    const haystack =
+      `${song.title} ${song.artist} ${song.genre}`.toLowerCase();
+
     return haystack.includes(query);
   });
 
@@ -807,59 +810,60 @@ function renderSongs(filter = "") {
     details.appendChild(artist);
     details.appendChild(genre);
 
-});const hasBeenPlayed = appState.playedSongs.some(
-  (playedSong) =>
-    playedSong.title === song.title &&
-    playedSong.artist === song.artist
-);
+    const hasBeenPlayed = appState.playedSongs.some(
+      (playedSong) =>
+        playedSong.title === song.title &&
+        playedSong.artist === song.artist
+    );
 
-const button = document.createElement("button");
-button.type = "button";
-button.className = "request-btn";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "request-btn";
 
-if (hasBeenPlayed && !appState.session.allowRepeats) {
-  button.textContent = "🚫 Repeats Disabled Tonight";
-  button.disabled = true;
-} else if (hasBeenPlayed) {
-  button.textContent = "🔁 Play It Again — $20";
+    if (hasBeenPlayed && !appState.session.allowRepeats) {
+      button.textContent = "🚫 Repeats Disabled Tonight";
+      button.disabled = true;
+    } else if (hasBeenPlayed) {
+      button.textContent = "🔁 Play It Again — $20";
 
-button.addEventListener("click", async () => {
-  button.disabled = true;
-  button.textContent = "Checking Repeats...";
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        button.textContent = "Checking Repeats...";
 
-  await loadSessionSettingsFromSupabase();
+        await loadSessionSettingsFromSupabase();
 
-  if (!appState.session.allowRepeats) {
-    button.textContent = "🚫 Repeats Disabled Tonight";
-    button.disabled = true;
-    return;
-  }
+        if (!appState.session.allowRepeats) {
+          button.textContent = "🚫 Repeats Disabled Tonight";
+          button.disabled = true;
+          return;
+        }
 
-  button.textContent = "Opening Payment...";
+        button.textContent = "Opening Payment...";
 
-  try {
-    await startStripeCheckout(song, "replay");
-  } catch (error) {
-    console.error("Replay checkout failed", error);
+        try {
+          await startStripeCheckout(song, "replay");
+        } catch (error) {
+          console.error("Replay checkout failed", error);
 
-    button.disabled = false;
-    button.textContent = "🔁 Play It Again — $20";
+          button.disabled = false;
+          button.textContent = "🔁 Play It Again — $20";
 
-    alert("Payment could not start. Please try again.");
-  }
-});
+          alert("Payment could not start. Please try again.");
+        }
+      });
+    } else {
+      button.textContent = "🎵 Request Song — $5";
 
-} else {
-  button.textContent = "🎵 Request Song — $5";
+      button.addEventListener("click", () => {
+        showRequestModal(song);
+      });
+    }
 
-  button.addEventListener("click", () => {
-    showRequestModal(song);
-  });
-}    row.appendChild(details);
+    row.appendChild(details);
     row.appendChild(button);
     songList.appendChild(row);
-  };
-
+  });
+}
 
 const landingPage = document.getElementById("landingPage");
 const songSearchPage = document.getElementById("songSearchPage");
