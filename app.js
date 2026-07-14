@@ -1323,23 +1323,36 @@ if (allowRepeatsBtn) {
     allowRepeatsBtn.disabled = true;
     allowRepeatsBtn.textContent = "Saving...";
 
-    const { error } = await supabase
-      .from("songrush_sessions")
-      .update({
-        allow_repeats: newAllowRepeatsValue,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("session_id", appState.session.id);
+const { data, error } = await supabase
+  .from("songrush_sessions")
+  .update({
+    allow_repeats: newAllowRepeatsValue,
+    updated_at: new Date().toISOString(),
+  })
+  .eq("session_id", appState.session.id)
+  .select("session_id, allow_repeats")
+  .maybeSingle();
 
-    if (error) {
-      console.error("Unable to update repeat setting", error);
+if (error) {
+  console.error("Unable to update repeat setting", error);
 
-      allowRepeatsBtn.disabled = false;
-      renderSessionUi();
-      return;
-    }
+  allowRepeatsBtn.disabled = false;
+  renderSessionUi();
+  return;
+}
 
-    appState.session.allowRepeats = newAllowRepeatsValue;
+if (!data) {
+  console.error(
+    "Repeat setting was not saved because no matching session row was found",
+    appState.session.id
+  );
+
+  allowRepeatsBtn.disabled = false;
+  await loadSessionSettingsFromSupabase();
+  return;
+}
+
+appState.session.allowRepeats = data.allow_repeats;
 
     renderSessionUi();
 
