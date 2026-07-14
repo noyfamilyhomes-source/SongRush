@@ -105,14 +105,18 @@ const appState = {
   selectedSong: null,
   currentView: "landing",
 
-  queue: [      id: 1,
+queue: [
+    {
+      id: 1,
       title: "Wonderwall",
       artist: "Oasis",
       type: "Standard Request",
       price: "$5",
-    },
+    },    
+    
     {
-      id: 2,
+      
+    id: 2,
       title: "Horses",
       artist: "Daryl Braithwaite",
       type: "Play It Again",
