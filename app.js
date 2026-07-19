@@ -1274,10 +1274,30 @@ function renderLiveQueue() {
   });
 }
 
-function startNewSession() {
+async function startNewSession() {
   const newCode = `SR-${String(
     Math.floor(Math.random() * 9000) + 1000
   )}`;
+
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from("songrush_sessions")
+      .upsert(
+        {
+          session_id: newCode,
+          allow_repeats: true,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "session_id",
+        }
+      );
+
+    if (error) {
+      console.error("Unable to create session settings", error);
+      return;
+    }
+  }
 
   appState.session = {
     ...appState.session,
@@ -1307,9 +1327,10 @@ function startNewSession() {
   renderLiveQueue();
   renderSessionUi();
 
-  loadRequestsFromSupabase();
-  loadNowPlayingFromSupabase();
-  loadPlayedTonightFromSupabase();
+  await loadSessionSettingsFromSupabase();
+  await loadRequestsFromSupabase();
+  await loadNowPlayingFromSupabase();
+  await loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
 }
 toggleRequestsBtn.addEventListener("click", () => {
