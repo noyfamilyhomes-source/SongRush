@@ -1,23 +1,30 @@
 import { isSupabaseConfigured, supabase } from "./supabase.js";
 function getRequestTypeDetails(optionValue) {
-  const requestTypes = {
-    standard: {
-      label: "Standard Request",
-      price: "$5",
-      amount: 5,
-    },
-    replay: {
-      label: "Play It Again",
-      price: "$20",
-      amount: 20,
-    },
-    jump: {
-      label: "Jump the Queue",
-      price: "$15",
-      amount: 15,
-    },
-  };
+const requestTypes = {
+  standard: {
+    label: "Add to Queue",
+    price: "$5",
+    amount: 5,
+  },
 
+  replay: {
+    label: "Play It Again",
+    price: "$20",
+    amount: 20,
+  },
+
+  jump: {
+    label: "Add to Front Queue",
+    price: "$15",
+    amount: 15,
+  },
+
+  outbid: {
+    label: "Outbid Front Queue",
+    price: "$30",
+    amount: 30,
+  },
+};
   return requestTypes[optionValue] || requestTypes.standard;
 }
 async function startStripeCheckout(song, optionValue) {
@@ -458,14 +465,14 @@ async function saveRequestToSupabase(song, optionValue) {
 
   const requestDetails = getRequestTypeDetails(optionValue);
 
-  const requestPayload = {
+  
     session_id: appState.session.id,
     song_title: song.title,
     artist: song.artist,
     priority: requestDetails.label,
     amount: Number(
       String(requestDetails.price).replace("$", "")
-    ),
+    ),const requestPayload = {
     status: "pending",
     created_at: new Date().toISOString(),
   };
