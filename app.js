@@ -1473,6 +1473,15 @@ async function initialiseSongRush() {
   await loadSessionSettingsFromSupabase();
   await loadSongs();
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentStatus = urlParams.get("payment");
+
+  if (paymentStatus === "success") {
+    showLiveQueueScreen();
+    subscribeToQueueChanges();
+    return;
+  }
+
   renderSessionUi();
   renderQueue();
   renderLiveQueue();
