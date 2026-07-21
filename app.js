@@ -1467,3 +1467,17 @@ async function loadActiveSessionFromSupabase() {
 
   renderSessionUi();
 }
+
+async function initialiseSongRush() {
+  await loadActiveSessionFromSupabase();
+  await loadSessionSettingsFromSupabase();
+  await loadSongs();
+
+  renderSessionUi();
+  renderQueue();
+  renderLiveQueue();
+
+  subscribeToQueueChanges();
+}
+
+initialiseSongRush();
