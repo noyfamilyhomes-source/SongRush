@@ -351,6 +351,14 @@ appState.playedSongs = (data || []).map((song) => ({
   artist: song.artist || "",
 }));
 
+if (
+  appState.currentView === "songSearch" &&
+  appState.songs.length > 0
+) {
+  renderSongs(songSearchInput.value);
+}
+
+playedTonightList.innerHTML = "";
   playedTonightList.innerHTML = "";
   if (!data || data.length === 0) {
     playedTonightList.innerHTML =
@@ -572,7 +580,6 @@ function showDashboard() {
   loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
   subscribeToSessionSettingsChanges();  
-  subscribeToSessionSettingsChanges();
 }
 function showRequestModal(song) {
   if (!song || !requestModal || !modalTitle || !modalArtist) {
@@ -855,12 +862,16 @@ function renderSongs(filter = "") {
     details.appendChild(artist);
     details.appendChild(genre);
 
-    const hasBeenPlayed = appState.playedSongs.some(
-      (playedSong) =>
-        playedSong.title === song.title &&
-        playedSong.artist === song.artist
-    );
+const normaliseSongText = (value) =>
+  String(value || "").trim().toLowerCase();
 
+const hasBeenPlayed = appState.playedSongs.some(
+  (playedSong) =>
+    normaliseSongText(playedSong.title) ===
+      normaliseSongText(song.title) &&
+    normaliseSongText(playedSong.artist) ===
+      normaliseSongText(song.artist)
+);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "request-btn";
