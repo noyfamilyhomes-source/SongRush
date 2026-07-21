@@ -1437,15 +1437,18 @@ async function loadSongs() {
 }
 async function loadActiveSessionFromSupabase() {
   if (!isSupabaseConfigured || !supabase) {
+    console.log("Supabase not configured");
     return;
   }
 
   const { data, error } = await supabase
     .from("songrush_sessions")
-    .select("session_id, allow_repeats")
+    .select("session_id, allow_repeats, updated_at")
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  console.log("Active session query:", { data, error });
 
   if (error) {
     console.error("Unable to load active session", error);
@@ -1453,47 +1456,14 @@ async function loadActiveSessionFromSupabase() {
   }
 
   if (!data) {
+    console.warn("No active session found.");
     return;
   }
 
   appState.session.id = data.session_id;
   appState.session.allowRepeats = data.allow_repeats;
 
+  console.log("Loaded active session:", appState.session.id);
+
   renderSessionUi();
 }
-async function initialiseApp() {
-  renderSessionUi();
-  renderQueue();
-  renderLiveQueue();
-
-  // Load the currently active session first
-  await loadActiveSessionFromSupabase();
-
-  // Then load everything that depends on that session
-  await loadSessionSettingsFromSupabase();
-  await loadNowPlayingFromSupabase();
-  await loadPlayedTonightFromSupabase();
-  await loadSongs();
-  await loadRequestsFromSupabase();
-
-  subscribeToQueueChanges();
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const paymentStatus = urlParams.get("payment");
-  const savedRequestTokens = getCurrentRequestTokens();
-
-  if (
-    paymentStatus === "success" ||
-    savedRequestTokens.length > 0
-  ) {
-    showLiveQueueScreen();
-
-    window.history.replaceState(
-      {},
-      document.title,
-      window.location.pathname
-    );
-  }
-}
-
-initialiseApp();
