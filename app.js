@@ -89,7 +89,7 @@ localStorage.setItem("songrushRequestToken", requestToken);
 let queueSubscription = null;
 const appState = {
   session: {
-id: localStorage.getItem("songrushSessionId") || "SR-8274",
+    id: "SR-8274",
     performerName: "Andrew Noy",
     showName: "Andrew Noy Live",
     venueName: "Demo Venue",
@@ -1274,7 +1274,65 @@ function renderLiveQueue() {
   });
 }
 
+async function startNewSession() {
+  const newCode = `SR-${String(
+    Math.floor(Math.random() * 9000) + 1000
+  )}`;
 
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from("songrush_sessions")
+      .upsert(
+        {
+          session_id: newCode,
+          allow_repeats: true,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "session_id",
+        }
+      );
+
+    if (error) {
+      console.error("Unable to create session settings", error);
+      return;
+    }
+  }
+
+  appState.session = {
+    ...appState.session,
+    id: newCode,
+    requestsOpen: true,
+    allowRepeats: true,
+    status: "LIVE",
+    startTime: new Date().toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    }),
+  };
+
+  appState.queue = [];
+  appState.playedSongs = [];
+
+  appState.liveQueue = {
+    nowPlaying: {
+      title: "Nothing currently playing",
+      artist: "",
+    },
+    upNext: [],
+    requests: [],
+  };
+
+  renderQueue();
+  renderLiveQueue();
+  renderSessionUi();
+
+  await loadSessionSettingsFromSupabase();
+  await loadRequestsFromSupabase();
+  await loadNowPlayingFromSupabase();
+  await loadPlayedTonightFromSupabase();
+  subscribeToQueueChanges();
+}
 toggleRequestsBtn.addEventListener("click", () => {
   appState.session.requestsOpen = !appState.session.requestsOpen;
   renderSessionUi();
