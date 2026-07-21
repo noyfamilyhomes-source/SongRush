@@ -1521,12 +1521,18 @@ async function loadSongs() {
     }
 
     appState.songs = await response.json();
+
+    await loadPlayedTonightFromSupabase();
+
     renderSongs();
   } catch (error) {
-    songList.innerHTML = '<p class="empty-state">No songs available.</p>';
+    console.error("Unable to load songs", error);
+
+    songList.innerHTML =
+      '<p class="empty-state">No songs available.</p>';
   }
 }
-async function loadActiveSessionFromSupabase() {
+  async function loadActiveSessionFromSupabase() {
   if (!isSupabaseConfigured || !supabase) {
     console.log("Supabase not configured");
     return;
