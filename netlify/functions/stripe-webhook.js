@@ -62,24 +62,21 @@ exports.handler = async (event) => {
     };
   }
 
-  const requestPayload = {
-    session_id: metadata.sessionId,
-    song_title: metadata.songTitle,
-    artist: metadata.artist || "",
-    priority: metadata.requestType,
-    requester_name: metadata.requesterName || "",
-    request_token: metadata.requestToken,
-    amount:
+const { error } = await supabase.rpc(
+  "insert_songrush_paid_request",
+  {
+    p_session_id: metadata.sessionId,
+    p_song_title: metadata.songTitle,
+    p_artist: metadata.artist || "",
+    p_priority: metadata.requestType,
+    p_requester_name: metadata.requesterName || "",
+    p_request_token: metadata.requestToken,
+    p_amount:
       typeof session.amount_total === "number"
         ? session.amount_total / 100
         : null,
-    status: "pending",
-  };
-
-  const { error } = await supabase
-    .from("song_requests")
-    .insert([requestPayload]);
-
+  }
+);
   if (error?.code === "23505") {
     console.log(
       "Duplicate Stripe webhook ignored:",
