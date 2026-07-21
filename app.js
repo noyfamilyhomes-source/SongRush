@@ -87,6 +87,7 @@ localStorage.setItem("songrushRequestToken", requestToken);
   window.location.href = data.url;
 }
 let queueSubscription = null;
+let sessionSettingsSubscription = null;
 const appState = {
   session: {
     id: "SR-8274",
@@ -405,6 +406,33 @@ function subscribeToQueueChanges() {
     )
     .subscribe();
 }
+
+function subscribeToSessionSettingsChanges() {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+
+  if (sessionSettingsSubscription) {
+    supabase.removeChannel(sessionSettingsSubscription);
+  }
+
+  sessionSettingsSubscription = supabase
+    .channel(`session-settings-${appState.session.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "songrush_sessions",
+        filter: `session_id=eq.${appState.session.id}`,
+      },
+      async () => {
+        await loadSessionSettingsFromSupabase();
+      }
+    )
+    .subscribe();
+}
+
 async function saveRequestToSupabase(song, optionValue) {
   if (!isSupabaseConfigured || !supabase) {
     appState.queue.unshift({
@@ -427,7 +455,9 @@ async function saveRequestToSupabase(song, optionValue) {
     song_title: song.title,
     artist: song.artist,
     priority: requestDetails.label,
-    amount: Number(String(requestDetails.price).replace("$", "")),
+    amount: Number(
+      String(requestDetails.price).replace("$", "")
+    ),
     status: "pending",
     created_at: new Date().toISOString(),
   };
@@ -443,7 +473,10 @@ async function saveRequestToSupabase(song, optionValue) {
 
     await loadRequestsFromSupabase();
   } catch (error) {
-    console.error("Unable to save request to Supabase", error);
+    console.error(
+      "Unable to save request to Supabase",
+      error
+    );
 
     appState.queue.unshift({
       id: Date.now(),
@@ -456,20 +489,27 @@ async function saveRequestToSupabase(song, optionValue) {
 
     renderQueue();
   }
-}async function loadSessionSettingsFromSupabase() {
+}
+
+async function loadSessionSettingsFromSupabase() {
   if (!isSupabaseConfigured || !supabase) {
     return;
   }
 
   const { data, error } = await supabase
     .from("songrush_sessions")
-    .select("allow_repeats")
+    .select("allow_repeats, requests_open")
     .eq("session_id", appState.session.id)
     .maybeSingle();
-    console.log("Session:", appState.session.id);
-    console.log("Settings row:", data, error);
+
+  console.log("Session:", appState.session.id);
+  console.log("Settings row:", data, error);
+
   if (error) {
-    console.error("Unable to load session settings", error);
+    console.error(
+      "Unable to load session settings",
+      error
+    );
     return;
   }
 
@@ -478,6 +518,7 @@ async function saveRequestToSupabase(song, optionValue) {
   }
 
   appState.session.allowRepeats = data.allow_repeats;
+  appState.session.requestsOpen = data.requests_open;
 
   renderSessionUi();
 
@@ -530,7 +571,10 @@ function showDashboard() {
   loadNowPlayingFromSupabase();
   loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
-}function showRequestModal(song) {
+  subscribeToSessionSettingsChanges();  
+  subscribeToSessionSettingsChanges();
+}
+function showRequestModal(song) {
   if (!song || !requestModal || !modalTitle || !modalArtist) {
     console.error("Unable to open request modal", {
       song,
@@ -649,6 +693,7 @@ if (!customerRequest || customerRequest.length === 0) {
 if (latestRequest.session_id !== appState.session.id) {
     appState.session.id = latestRequest.session_id;    renderSessionUi();
     subscribeToQueueChanges();
+    subscribeToSessionSettingsChanges();
   }
 
 const { data: pendingQueue, error: queueError } =
@@ -1279,19 +1324,20 @@ async function startNewSession() {
     Math.floor(Math.random() * 9000) + 1000
   )}`;
 
-  if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase
-      .from("songrush_sessions")
-      .upsert(
-        {
-          session_id: newCode,
-          allow_repeats: true,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "session_id",
-        }
-      );
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase
+        .from("songrush_sessions")
+        .upsert(
+          {
+            session_id: newCode,
+            allow_repeats: true,
+            requests_open: true,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "session_id",
+          }
+        );
 
     if (error) {
       console.error("Unable to create session settings", error);
@@ -1332,12 +1378,57 @@ async function startNewSession() {
   await loadNowPlayingFromSupabase();
   await loadPlayedTonightFromSupabase();
   subscribeToQueueChanges();
+  subscribeToSessionSettingsChanges();
 }
-toggleRequestsBtn.addEventListener("click", () => {
-  appState.session.requestsOpen = !appState.session.requestsOpen;
-  renderSessionUi();
-});
+toggleRequestsBtn.addEventListener("click", async () => {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
 
+  const newRequestsOpenValue = !appState.session.requestsOpen;
+
+  toggleRequestsBtn.disabled = true;
+  toggleRequestsBtn.textContent = "Saving...";
+
+  const { data, error } = await supabase
+    .from("songrush_sessions")
+    .update({
+      requests_open: newRequestsOpenValue,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("session_id", appState.session.id)
+    .select("session_id, requests_open")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Unable to update request setting", error);
+
+    toggleRequestsBtn.disabled = false;
+    renderSessionUi();
+    return;
+  }
+
+  if (!data) {
+    console.error(
+      "Request setting was not saved because no matching session row was found",
+      appState.session.id
+    );
+
+    toggleRequestsBtn.disabled = false;
+    await loadSessionSettingsFromSupabase();
+    return;
+  }
+
+  appState.session.requestsOpen = data.requests_open;
+
+  renderSessionUi();
+
+  if (appState.currentView === "songSearch") {
+    renderSongs(songSearchInput.value);
+  }
+
+  toggleRequestsBtn.disabled = false;
+});
 if (allowRepeatsBtn) {
   allowRepeatsBtn.addEventListener("click", async () => {
     if (!isSupabaseConfigured || !supabase) {
@@ -1443,15 +1534,23 @@ async function loadActiveSessionFromSupabase() {
 
   const { data, error } = await supabase
     .from("songrush_sessions")
-    .select("session_id, allow_repeats, updated_at")
+    .select(
+      "session_id, allow_repeats, requests_open, updated_at"
+    )
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  console.log("Active session query:", { data, error });
+  console.log("Active session query:", {
+    data,
+    error,
+  });
 
   if (error) {
-    console.error("Unable to load active session", error);
+    console.error(
+      "Unable to load active session",
+      error
+    );
     return;
   }
 
@@ -1462,8 +1561,12 @@ async function loadActiveSessionFromSupabase() {
 
   appState.session.id = data.session_id;
   appState.session.allowRepeats = data.allow_repeats;
+  appState.session.requestsOpen = data.requests_open;
 
-  console.log("Loaded active session:", appState.session.id);
+  console.log(
+    "Loaded active session:",
+    appState.session.id
+  );
 
   renderSessionUi();
 }
@@ -1473,12 +1576,16 @@ async function initialiseSongRush() {
   await loadSessionSettingsFromSupabase();
   await loadSongs();
 
-  const urlParams = new URLSearchParams(window.location.search);
+  const urlParams = new URLSearchParams(
+    window.location.search
+  );
+
   const paymentStatus = urlParams.get("payment");
 
   if (paymentStatus === "success") {
     showLiveQueueScreen();
     subscribeToQueueChanges();
+    subscribeToSessionSettingsChanges();
     return;
   }
 
@@ -1487,6 +1594,7 @@ async function initialiseSongRush() {
   renderLiveQueue();
 
   subscribeToQueueChanges();
+  subscribeToSessionSettingsChanges();
 }
 
 initialiseSongRush();
