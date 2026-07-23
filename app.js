@@ -1590,6 +1590,10 @@ const allowRepeatsBtn =
     "allowRepeatsBtn"
   );
 
+const barRushBtn =
+  document.getElementById(
+    "barRushBtn"
+  );
 joinButton.addEventListener(
   "click",
   showSongList
@@ -2588,6 +2592,11 @@ if (allowRepeatsBtn) {
         false;
     }
   );
+}
+if (barRushBtn) {
+  barRushBtn.addEventListener("click", () => {
+    alert("🍻 BAR RUSH is coming next!");
+  });
 }
 
 if (startNewSessionBtn) {
