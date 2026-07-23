@@ -783,12 +783,21 @@ button:disabled:hover {
 /* ---------- TV Display ---------- */
 
 #tvDisplayPage .live-queue-card {
+    position: relative;
     max-width: 1100px;
     margin: 0 auto;
     text-align: center;
     padding: 48px;
 }
 
+#backFromTvDisplayBtn {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    width: auto;
+    padding: 10px 18px;
+    z-index: 1000;
+}
 #tvDisplayPage h1 {
     font-size: 4rem;
     margin-bottom: 28px;
