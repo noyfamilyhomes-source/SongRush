@@ -465,14 +465,14 @@ async function saveRequestToSupabase(song, optionValue) {
 
   const requestDetails = getRequestTypeDetails(optionValue);
 
-  
+  const requestPayload = {
     session_id: appState.session.id,
     song_title: song.title,
     artist: song.artist,
     priority: requestDetails.label,
     amount: Number(
       String(requestDetails.price).replace("$", "")
-    ),const requestPayload = {
+    ),
     status: "pending",
     created_at: new Date().toISOString(),
   };
@@ -505,7 +505,6 @@ async function saveRequestToSupabase(song, optionValue) {
     renderQueue();
   }
 }
-
 async function loadSessionSettingsFromSupabase() {
   if (!isSupabaseConfigured || !supabase) {
     return;
