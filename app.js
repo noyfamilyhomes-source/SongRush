@@ -2594,10 +2594,120 @@ if (allowRepeatsBtn) {
   );
 }
 if (barRushBtn) {
-  barRushBtn.addEventListener("click", () => {
-    alert("🍻 BAR RUSH is coming next!");
-  });
+  barRushBtn.addEventListener(
+    "click",
+    async () => {
+      if (
+        !isSupabaseConfigured ||
+        !supabase
+      ) {
+        alert(
+          "Bar Rush cannot launch because Supabase is not connected."
+        );
+
+        return;
+      }
+
+      const offerText = prompt(
+        "What is the Bar Rush offer?",
+        "$5 HOUSE BEERS"
+      );
+
+      if (!offerText || !offerText.trim()) {
+        return;
+      }
+
+      const durationInput = prompt(
+        "How many minutes will Bar Rush run?",
+        "10"
+      );
+
+      if (durationInput === null) {
+        return;
+      }
+
+      const durationMinutes =
+        Number.parseInt(
+          durationInput,
+          10
+        );
+
+      if (
+        !Number.isInteger(
+          durationMinutes
+        ) ||
+        durationMinutes < 1
+      ) {
+        alert(
+          "Please enter a valid number of minutes."
+        );
+
+        return;
+      }
+
+      const expiresAt = new Date(
+        Date.now() +
+          durationMinutes *
+            60 *
+            1000
+      ).toISOString();
+
+      barRushBtn.disabled = true;
+
+      barRushBtn.textContent =
+        "Launching Bar Rush...";
+
+      const { error } = await supabase
+        .from(
+          "bar_rush_announcements"
+        )
+        .insert([
+          {
+            session_id:
+              appState.session.id,
+
+            offer_text:
+              offerText.trim(),
+
+            duration_minutes:
+              durationMinutes,
+
+            status: "active",
+
+            expires_at: expiresAt,
+          },
+        ]);
+
+      if (error) {
+        console.error(
+          "Unable to launch Bar Rush",
+          error
+        );
+
+        alert(
+          "Bar Rush could not be launched."
+        );
+
+        barRushBtn.disabled = false;
+
+        barRushBtn.textContent =
+          "🍻 BAR RUSH";
+
+        return;
+      }
+
+      alert(
+        `🍻 BAR RUSH launched!\n\n${offerText.trim()}\n${durationMinutes} minutes`
+      );
+
+      barRushBtn.disabled = false;
+
+      barRushBtn.textContent =
+        "🍻 BAR RUSH";
+    }
+  );
 }
+
 
 if (startNewSessionBtn) {
   startNewSessionBtn.addEventListener(
