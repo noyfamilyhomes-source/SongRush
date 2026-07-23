@@ -1003,13 +1003,15 @@ const allowRepeatsBtn =
   document.getElementById("allowRepeatsBtn");
 
 joinButton.addEventListener("click", showSongList);
-tvDisplayButton.addEventListener(
-  "click",
-  showTvDisplay
-);
+
+if (tvDisplayButton) {
+  tvDisplayButton.addEventListener(
+    "click",
+    showTvDisplay
+  );
+}
 
 dashboardButton.addEventListener("click", showDashboard);
-
 backToLandingBtn.addEventListener("click", showLandingPage);
 
 homeFromSearchBtn.addEventListener("click", showLandingPage);
