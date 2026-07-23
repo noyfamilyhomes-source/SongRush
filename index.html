@@ -3,16 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>SongRush</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div class="container" id="landingPage">
         <h1>🎸 SongRush</h1>
-        <h2>You Pick.<br>We Play.</h2>
 
-        <div class="session-summary" data-session-summary></div>
+        <h2>
+            You Pick.<br>
+            We Play.
+        </h2>
+
+        <div
+            class="session-summary"
+            data-session-summary
+        ></div>
 
         <div class="landing-actions">
             <button
@@ -23,7 +32,10 @@
                 📺 TV Display
             </button>
 
-            <button id="joinButton" type="button">
+            <button
+                id="joinButton"
+                type="button"
+            >
                 Join Tonight's Show
             </button>
 
@@ -39,7 +51,11 @@
         <p>No app required.</p>
     </div>
 
-    <div class="song-search-page" id="songSearchPage" hidden>
+    <div
+        class="song-search-page"
+        id="songSearchPage"
+        hidden
+    >
         <div class="song-search-card">
             <h1>🎸 SongRush</h1>
 
@@ -55,7 +71,10 @@
                 </button>
             </div>
 
-            <div class="session-summary" data-session-summary></div>
+            <div
+                class="session-summary"
+                data-session-summary
+            ></div>
 
             <input
                 id="songSearchInput"
@@ -64,7 +83,10 @@
                 aria-label="Search songs"
             >
 
-            <div id="songList" class="song-list"></div>
+            <div
+                id="songList"
+                class="song-list"
+            ></div>
         </div>
     </div>
 
@@ -76,8 +98,14 @@
         aria-labelledby="modalTitle"
     >
         <div class="modal-card">
-            <h3 id="modalTitle">Song Title</h3>
-            <p id="modalArtist" class="song-artist"></p>
+            <h3 id="modalTitle">
+                Song Title
+            </h3>
+
+            <p
+                id="modalArtist"
+                class="song-artist"
+            ></p>
 
             <div class="modal-options">
                 <button
@@ -118,14 +146,29 @@
         </div>
     </div>
 
-    <div id="successScreen" class="success-screen hidden">
+    <div
+        id="successScreen"
+        class="success-screen hidden"
+    >
         <div class="song-search-card success-card">
             <h1>🎸 SongRush</h1>
+
             <h2>✅ Request Received</h2>
 
-            <p class="success-label">Song:</p>
-            <p id="successTitle" class="success-title">Song Title</p>
-            <p class="success-message">Your request has been added.</p>
+            <p class="success-label">
+                Song:
+            </p>
+
+            <p
+                id="successTitle"
+                class="success-title"
+            >
+                Song Title
+            </p>
+
+            <p class="success-message">
+                Your request has been added.
+            </p>
 
             <div class="success-meta">
                 <div>
@@ -143,7 +186,10 @@
                 Thank you for supporting live music!
             </p>
 
-            <button id="backToListBtn" type="button">
+            <button
+                id="backToListBtn"
+                type="button"
+            >
                 Back to Song List
             </button>
         </div>
@@ -157,31 +203,61 @@
         <div class="live-queue-card">
             <div class="brand-block">
                 <h1>🎸 SongRush</h1>
-                <p class="eyebrow">Live Queue</p>
+
+                <p class="eyebrow">
+                    Live Queue
+                </p>
             </div>
 
-            <div class="session-summary" data-session-summary></div>
+            <div
+                class="session-summary"
+                data-session-summary
+            ></div>
 
-            <section class="queue-panel now-playing-panel">
-                <div class="section-label">NOW PLAYING</div>
+            <section
+                class="queue-panel now-playing-panel"
+            >
+                <div class="section-label">
+                    NOW PLAYING
+                </div>
 
                 <div class="now-playing-card">
-                    <div class="music-badge">🎵</div>
+                    <div class="music-badge">
+                        🎵
+                    </div>
 
                     <div>
-                        <h2 id="nowPlayingTitle">Better Man</h2>
-                        <p id="nowPlayingArtist">Pearl Jam</p>
+                        <h2 id="nowPlayingTitle">
+                            Better Man
+                        </h2>
+
+                        <p id="nowPlayingArtist">
+                            Pearl Jam
+                        </p>
                     </div>
                 </div>
             </section>
 
-            <section class="queue-panel up-next-panel">
-                <div class="section-label">UP NEXT</div>
-                <ol id="upNextList" class="up-next-list"></ol>
+            <section
+                class="queue-panel up-next-panel"
+            >
+                <div class="section-label">
+                    UP NEXT
+                </div>
+
+                <ol
+                    id="upNextList"
+                    class="up-next-list"
+                ></ol>
             </section>
 
-            <section class="queue-panel request-panel">
-                <div class="section-label">MY REQUESTS</div>
+            <section
+                class="queue-panel request-panel"
+            >
+                <div class="section-label">
+                    MY REQUESTS
+                </div>
+
                 <div id="myRequestsList"></div>
             </section>
 
@@ -194,14 +270,20 @@
                     Browse More Songs
                 </button>
 
-                <button id="returnHomeBtn" type="button">
+                <button
+                    id="returnHomeBtn"
+                    type="button"
+                >
                     Return Home
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="live-queue-page hidden" id="tvDisplayPage">
+    <div
+        class="live-queue-page hidden"
+        id="tvDisplayPage"
+    >
         <div class="live-queue-card">
             <button
                 id="backFromTvDisplayBtn"
@@ -211,26 +293,62 @@
                 Back to Home
             </button>
 
-            <h1>🎸 SongRush</h1>
+            <div id="tvNormalDisplay">
+                <h1>🎸 SongRush</h1>
 
-            <div class="section-label">NOW PLAYING</div>
-
-            <div class="now-playing-card">
-                <div class="music-badge">🎵</div>
-
-                <div>
-                    <h2 id="tvNowPlayingTitle"></h2>
-                    <p id="tvNowPlayingArtist"></p>
+                <div class="section-label">
+                    NOW PLAYING
                 </div>
+
+                <div class="now-playing-card">
+                    <div class="music-badge">
+                        🎵
+                    </div>
+
+                    <div>
+                        <h2 id="tvNowPlayingTitle"></h2>
+
+                        <p id="tvNowPlayingArtist"></p>
+                    </div>
+                </div>
+
+                <div class="section-label">
+                    UP NEXT
+                </div>
+
+                <ol
+                    id="tvQueueList"
+                    class="up-next-list"
+                ></ol>
+
+                <div class="section-label">
+                    SCAN TO REQUEST
+                </div>
+
+                <div id="tvQrCode"></div>
             </div>
 
-            <div class="section-label">UP NEXT</div>
+            <div
+                id="tvBarRushPanel"
+                class="tv-bar-rush-panel hidden"
+                aria-live="assertive"
+            >
+                <div class="tv-bar-rush-icon">
+                    🍻
+                </div>
 
-            <ol id="tvQueueList" class="up-next-list"></ol>
+                <div class="tv-bar-rush-label">
+                    BAR RUSH
+                </div>
 
-            <div class="section-label">SCAN TO REQUEST</div>
+                <h1 id="tvBarRushOffer">
+                    Special Offer
+                </h1>
 
-            <div id="tvQrCode"></div>
+                <p id="tvBarRushCountdown">
+                    Ending soon
+                </p>
+            </div>
         </div>
     </div>
 
@@ -254,15 +372,23 @@
 
             <h2>Performer Dashboard</h2>
 
-            <div id="backendWarning" class="backend-warning hidden">
+            <div
+                id="backendWarning"
+                class="backend-warning hidden"
+            >
                 Live backend not connected yet
             </div>
 
             <div class="dashboard-session-card">
                 <div class="dashboard-session-header">
                     <div>
-                        <p class="section-label">CURRENT SESSION</p>
-                        <h3 id="dashboardSessionName">Andrew Noy Live</h3>
+                        <p class="section-label">
+                            CURRENT SESSION
+                        </p>
+
+                        <h3 id="dashboardSessionName">
+                            Andrew Noy Live
+                        </h3>
                     </div>
 
                     <span
@@ -275,29 +401,53 @@
 
                 <div class="session-stats">
                     <div>
-                        <span class="stat-label">Session Code</span>
-                        <span id="dashboardSessionCode" class="stat-value">
+                        <span class="stat-label">
+                            Session Code
+                        </span>
+
+                        <span
+                            id="dashboardSessionCode"
+                            class="stat-value"
+                        >
                             SR-8274
                         </span>
                     </div>
 
                     <div>
-                        <span class="stat-label">Venue</span>
-                        <span id="dashboardVenue" class="stat-value">
+                        <span class="stat-label">
+                            Venue
+                        </span>
+
+                        <span
+                            id="dashboardVenue"
+                            class="stat-value"
+                        >
                             Demo Venue
                         </span>
                     </div>
 
                     <div>
-                        <span class="stat-label">Start Time</span>
-                        <span id="dashboardStartTime" class="stat-value">
+                        <span class="stat-label">
+                            Start Time
+                        </span>
+
+                        <span
+                            id="dashboardStartTime"
+                            class="stat-value"
+                        >
                             7:30 PM
                         </span>
                     </div>
 
                     <div>
-                        <span class="stat-label">Table</span>
-                        <span id="dashboardTable" class="stat-value">
+                        <span class="stat-label">
+                            Table
+                        </span>
+
+                        <span
+                            id="dashboardTable"
+                            class="stat-value"
+                        >
                             Table 12
                         </span>
                     </div>
@@ -320,24 +470,27 @@
                 Requests Open
             </button>
 
-<button
-    id="allowRepeatsBtn"
-    class="toggle-btn"
-    type="button"
->
-    Repeats Tonight: Allowed
-</button>
+            <button
+                id="allowRepeatsBtn"
+                class="toggle-btn"
+                type="button"
+            >
+                Repeats Tonight: Allowed
+            </button>
 
-<button
-    id="barRushBtn"
-    class="toggle-btn"
-    type="button"
->
-    🍻 BAR RUSH
-</button>
+            <button
+                id="barRushBtn"
+                class="toggle-btn"
+                type="button"
+            >
+                🍻 BAR RUSH
+            </button>
+
             <section class="now-playing-card">
                 <div>
-                    <p class="eyebrow">Now Playing</p>
+                    <p class="eyebrow">
+                        Now Playing
+                    </p>
 
                     <h2 id="now-playing-title">
                         Nothing currently playing
@@ -358,16 +511,27 @@
 
             <div class="queue-section">
                 <h3>Queue</h3>
-                <div id="queueList" class="queue-list"></div>
+
+                <div
+                    id="queueList"
+                    class="queue-list"
+                ></div>
             </div>
 
             <div class="queue-section">
                 <h3>Played Tonight</h3>
-                <div id="playedTonightList" class="queue-list"></div>
+
+                <div
+                    id="playedTonightList"
+                    class="queue-list"
+                ></div>
             </div>
         </div>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <script
+        type="module"
+        src="app.js"
+    ></script>
 </body>
 </html>

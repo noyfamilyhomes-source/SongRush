@@ -1134,6 +1134,34 @@ async function loadTvDisplayFromSupabase() {
   }
 
   const {
+    data: barRush,
+    error: barRushError,
+  } = await supabase
+    .from("bar_rush_announcements")
+    .select("*")
+    .eq("session_id", appState.session.id)
+    .eq("status", "active")
+    .gt(
+      "expires_at",
+      new Date().toISOString()
+    )
+    .order("created_at", {
+      ascending: false,
+    })
+    .limit(1)
+    .maybeSingle();
+
+  if (barRushError) {
+    console.error(
+      "Unable to load Bar Rush",
+      barRushError
+    );
+  }
+
+  appState.barRush =
+    barRush || null;
+
+  const {
     data: pendingQueue,
     error: queueError,
   } = await supabase
@@ -1169,7 +1197,7 @@ async function loadTvDisplayFromSupabase() {
   } = await supabase
     .from("song_requests")
     .select(
-      "id, song_title, artist, created_at"
+      "id, song_title, artist"
     )
     .eq(
       "session_id",
@@ -1216,7 +1244,6 @@ async function loadTvDisplayFromSupabase() {
 
   renderTvDisplay();
 }
-
 function showLiveQueueScreen(
   song = null
 ) {
@@ -2317,6 +2344,79 @@ function renderTvDisplay() {
     return;
   }
 
+  const normalDisplay =
+    document.getElementById(
+      "tvNormalDisplay"
+    );
+
+  const barRushPanel =
+    document.getElementById(
+      "tvBarRushPanel"
+    );
+
+  const offerEl =
+    document.getElementById(
+      "tvBarRushOffer"
+    );
+
+  const countdownEl =
+    document.getElementById(
+      "tvBarRushCountdown"
+    );
+
+  if (
+    appState.barRush &&
+    normalDisplay &&
+    barRushPanel
+  ) {
+    normalDisplay.classList.add(
+      "hidden"
+    );
+
+    barRushPanel.classList.remove(
+      "hidden"
+    );
+
+    if (offerEl) {
+      offerEl.textContent =
+        appState.barRush.offer_text;
+    }
+
+    if (countdownEl) {
+      const expires =
+        new Date(
+          appState.barRush.expires_at
+        );
+
+      const minutes = Math.max(
+        0,
+        Math.ceil(
+          (expires - new Date()) /
+            60000
+        )
+      );
+
+      countdownEl.textContent =
+        `${minutes} minute${
+          minutes === 1 ? "" : "s"
+        } remaining`;
+    }
+
+    return;
+  }
+
+  if (normalDisplay) {
+    normalDisplay.classList.remove(
+      "hidden"
+    );
+  }
+
+  if (barRushPanel) {
+    barRushPanel.classList.add(
+      "hidden"
+    );
+  }
+
   tvNowPlayingTitle.textContent =
     appState.liveQueue
       .nowPlaying?.title ||
@@ -2330,7 +2430,8 @@ function renderTvDisplay() {
   tvQueueList.innerHTML = "";
 
   if (
-    !appState.liveQueue.upNext.length
+    !appState.liveQueue.upNext ||
+    appState.liveQueue.upNext.length === 0
   ) {
     const item =
       document.createElement("li");
@@ -2339,6 +2440,7 @@ function renderTvDisplay() {
       "No songs in queue";
 
     tvQueueList.appendChild(item);
+
     return;
   }
 

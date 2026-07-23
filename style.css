@@ -841,3 +841,48 @@ button:disabled:hover {
     background: white;
     border-radius: 18px;
 }
+/* ---------- Bar Rush TV ---------- */
+
+.tv-bar-rush-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 75vh;
+    text-align: center;
+    animation: barRushPulse 1.2s ease-in-out infinite alternate;
+}
+
+.tv-bar-rush-icon {
+    font-size: 7rem;
+    margin-bottom: 20px;
+}
+
+.tv-bar-rush-label {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.35rem;
+    color: #ffd54a;
+    margin-bottom: 20px;
+}
+
+#tvBarRushOffer {
+    font-size: clamp(3rem, 7vw, 6rem);
+    color: #ffffff;
+    margin: 0 0 24px;
+}
+
+#tvBarRushCountdown {
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: #ffcc66;
+    margin: 0;
+}
+
+@keyframes barRushPulse {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.03);
+    }
+}
