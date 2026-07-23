@@ -780,3 +780,55 @@ button:disabled:hover {
         min-height: 50px;
     }
 }
+/* ---------- TV Display ---------- */
+
+#tvDisplayPage .live-queue-card {
+    max-width: 1100px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 48px;
+}
+
+#tvDisplayPage h1 {
+    font-size: 4rem;
+    margin-bottom: 28px;
+}
+
+#tvDisplayPage .section-label {
+    font-size: 1.2rem;
+    letter-spacing: 0.25em;
+    margin-top: 36px;
+    margin-bottom: 18px;
+}
+
+#tvNowPlayingTitle {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+#tvNowPlayingArtist {
+    font-size: 2rem;
+    color: rgba(255,255,255,0.8);
+    margin-top: 10px;
+}
+
+#tvQueueList {
+    list-style: none;
+    margin: 30px 0;
+    padding: 0;
+}
+
+#tvQueueList li {
+    font-size: 2rem;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+#tvQrCode {
+    width: 220px;
+    height: 220px;
+    margin: 40px auto 0;
+    background: white;
+    border-radius: 18px;
+}
