@@ -417,11 +417,14 @@ function subscribeToQueueChanges() {
         if (appState.currentView === "liveQueue") {
           await loadCustomerLiveQueueFromSupabase();
         }
+
+        if (appState.currentView === "tvDisplay") {
+          renderTvDisplay();
+        }
       }
     )
     .subscribe();
 }
-
 function subscribeToSessionSettingsChanges() {
   if (!isSupabaseConfigured || !supabase) {
     return;
