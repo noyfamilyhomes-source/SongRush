@@ -12,8 +12,10 @@
         <h1>🎸 SongRush</h1>
         <h2>You Pick.<br>We Play.</h2>
         <div class="session-summary" data-session-summary></div>
-        <div class="landing-actions">
-            <button id="joinButton">Join Tonight's Show</button>
+<div class="landing-actions">
+    <button id="tvDisplayButton" class="secondary-btn">
+        📺 TV Display
+    </button>            <button id="joinButton">Join Tonight's Show</button>
             <button id="dashboardButton" class="secondary-btn">Performer Dashboard</button>
         </div>
         <p>No app required.</p>
@@ -102,8 +104,38 @@
             </div>
         </div>
     </div>
+<div class="live-queue-page hidden" id="tvDisplayPage">
+    <div class="live-queue-card">
 
-    <div class="dashboard-page hidden" id="dashboardPage" aria-live="polite">
+        <h1>🎸 SongRush</h1>
+
+        <div class="section-label">
+            NOW PLAYING
+        </div>
+
+        <div class="now-playing-card">
+            <div class="music-badge">🎵</div>
+
+            <div>
+                <h2 id="tvNowPlayingTitle"></h2>
+                <p id="tvNowPlayingArtist"></p>
+            </div>
+        </div>
+
+        <div class="section-label">
+            UP NEXT
+        </div>
+
+        <ol id="tvQueueList" class="up-next-list"></ol>
+
+        <div class="section-label">
+            Scan To Request
+        </div>
+
+        <div id="tvQrCode"></div>
+
+    </div>
+</div>    <div class="dashboard-page hidden" id="dashboardPage" aria-live="polite">
         <div class="song-search-card dashboard-card">
             <div class="dashboard-header">
                 <h1>🎸 SongRush</h1>
