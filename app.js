@@ -823,7 +823,24 @@ appState.liveQueue.requests = [
   renderLiveQueue();
   loadCustomerLiveQueueFromSupabase();
 }
+function showTvDisplay() {
+  appState.currentView = "tvDisplay";
 
+  landingPage.hidden = true;
+  songSearchPage.hidden = true;
+
+  dashboardPage.classList.add("hidden");
+  liveQueuePage.classList.add("hidden");
+
+  tvDisplayPage.classList.remove("hidden");
+
+  successScreen.classList.add("hidden");
+  requestModal.classList.add("hidden");
+
+  renderTvDisplay();
+
+  subscribeToQueueChanges();
+}
 function showSuccessScreen(song) {
   showLiveQueueScreen(song);
 }
@@ -932,7 +949,19 @@ const landingPage = document.getElementById("landingPage");
 const songSearchPage = document.getElementById("songSearchPage");
 const dashboardPage = document.getElementById("dashboardPage");
 const liveQueuePage = document.getElementById("liveQueuePage");
-const successScreen = document.getElementById("successScreen");
+const tvDisplayPage = document.getElementById("tvDisplayPage");
+
+const tvDisplayButton =
+  document.getElementById("tvDisplayButton");
+
+const tvNowPlayingTitle =
+  document.getElementById("tvNowPlayingTitle");
+
+const tvNowPlayingArtist =
+  document.getElementById("tvNowPlayingArtist");
+
+const tvQueueList =
+  document.getElementById("tvQueueList");const successScreen = document.getElementById("successScreen");
 const requestModal = document.getElementById("requestModal");
 const modalTitle = document.getElementById("modalTitle");
 const modalArtist = document.getElementById("modalArtist");
@@ -971,6 +1000,10 @@ const allowRepeatsBtn =
   document.getElementById("allowRepeatsBtn");
 
 joinButton.addEventListener("click", showSongList);
+tvDisplayButton.addEventListener(
+  "click",
+  showTvDisplay
+);
 
 dashboardButton.addEventListener("click", showDashboard);
 
@@ -1336,6 +1369,36 @@ function renderLiveQueue() {
   });
 }
 
+function renderTvDisplay() {
+  if (!tvNowPlayingTitle || !tvNowPlayingArtist || !tvQueueList) {
+    return;
+  }
+
+  tvNowPlayingTitle.textContent =
+    appState.liveQueue.nowPlaying?.title ||
+    "Nothing currently playing";
+
+  tvNowPlayingArtist.textContent =
+    appState.liveQueue.nowPlaying?.artist || "";
+
+  tvQueueList.innerHTML = "";
+
+  if (!appState.liveQueue.upNext.length) {
+    const item = document.createElement("li");
+    item.textContent = "No songs in queue";
+    tvQueueList.appendChild(item);
+    return;
+  }
+
+  appState.liveQueue.upNext.forEach((song, index) => {
+    const item = document.createElement("li");
+    item.textContent =
+      `${index + 1}. ${song.title} — ${song.artist}`;
+
+    tvQueueList.appendChild(item);
+  });
+}
+
 async function startNewSession() {
   const newCode = `SR-${String(
     Math.floor(Math.random() * 9000) + 1000
@@ -1611,7 +1674,6 @@ async function initialiseSongRush() {
     subscribeToSessionSettingsChanges();
     return;
   }
-
   renderSessionUi();
   renderQueue();
   renderLiveQueue();
