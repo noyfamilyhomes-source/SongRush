@@ -1,52 +1,582 @@
 [
   {
-    "title": "Sweet Child O' Mine",
-    "artist": "Guns N' Roses",
-    "genre": "Rock"
+    "title": "Diggin' My Grave",
+    "artist": "A Star is Born (2018 film) (Lady Gaga & Bradley Cooper)",
+    "genre": "Unknown"
   },
   {
-    "title": "Better Man",
-    "artist": "Pearl Jam",
-    "genre": "Alternative Rock"
+    "title": "Let Her Cry",
+    "artist": "Hootie & the Blowfish",
+    "genre": "Unknown"
   },
   {
-    "title": "Wonderwall",
-    "artist": "Oasis",
-    "genre": "Britpop"
+    "title": "Walking in Memphis",
+    "artist": "Marc Cohn",
+    "genre": "Unknown"
   },
   {
-    "title": "Horses",
-    "artist": "Patti Smith",
-    "genre": "Art Rock"
+    "title": "Fast Car",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
   },
   {
-    "title": "Shimmer",
-    "artist": "Fuel",
-    "genre": "Post-Grunge"
+    "title": "I Was Only 19 (A Walk in the Light Green)",
+    "artist": "Redgum",
+    "genre": "Unknown"
   },
   {
-    "title": "Bohemian Rhapsody",
+    "title": "Passenger",
+    "artist": "Powderfinger",
+    "genre": "Unknown"
+  },
+  {
+    "title": "My Hero (live acoustic)",
+    "artist": "Foo Fighters",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Cocaine Blues",
+    "artist": "Johnny Cash",
+    "genre": "Unknown"
+  },
+  {
+    "title": "3AM",
+    "artist": "Matchbox Twenty",
+    "genre": "Unknown"
+  },
+  {
+    "title": "I Heard It Through the Grapevine (album version)",
+    "artist": "Creedence Clearwater Revival",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Layla (live Unplugged)",
+    "artist": "Eric Clapton",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Father and Son",
+    "artist": "Cat Stevens",
+    "genre": "Unknown"
+  },
+  {
+    "title": "By My Side",
+    "artist": "INXS",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Easy",
+    "artist": "Faith No More",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Downfall",
+    "artist": "Matchbox Twenty",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Rethink Some Things",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "True Blue",
+    "artist": "John Williamson",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Something in the Orange",
+    "artist": "Zach Bryan",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Blue on Black",
+    "artist": "Kenny Wayne Shepherd",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Hold My Hand",
+    "artist": "Hootie & the Blowfish",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Beautiful Crazy",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Creep",
+    "artist": "Radiohead",
+    "genre": "Unknown"
+  },
+  {
+    "title": "To Her Door",
+    "artist": "Paul Kelly",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Lay Down Sally",
+    "artist": "Eric Clapton",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Wild World",
+    "artist": "Cat Stevens",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Tip Of My Tongue",
+    "artist": "Johnny Diesel",
+    "genre": "Unknown"
+  },
+  {
+    "title": "The Beaches of Cheyenne",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "I Like It",
+    "artist": "I Love It",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Alibi",
+    "artist": "A Star is Born (2018 film) (Bradley Cooper)",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Standing Outside the Fire",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Oh No Not You Again",
+    "artist": "Australian Crawl",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Push",
+    "artist": "Matchbox Twenty",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Drift Away",
+    "artist": "Dobie Gray",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Dive",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "The Midnight Special",
+    "artist": "Creedence Clearwater Revival",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Weather with You",
+    "artist": "Crowded House",
+    "genre": "Unknown"
+  },
+  {
+    "title": "What's My Scene?",
+    "artist": "Hoodoo Gurus",
+    "genre": "Unknown"
+  },
+  {
+    "title": "These Days",
+    "artist": "Powderfinger",
+    "genre": "Unknown"
+  },
+  {
+    "title": "I'm a Believer",
+    "artist": "Smash Mouth (Shrek film)",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Red Solo Cup",
+    "artist": "Toby Keith",
+    "genre": "Unknown"
+  },
+  {
+    "title": "We Shall Be Free",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "The Night I Called The Old Man Out",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Play It Again",
+    "artist": "Luke Bryan",
+    "genre": "Unknown"
+  },
+  {
+    "title": "This Is How a Heart Breaks",
+    "artist": "Rob Thomas",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Bright Lights",
+    "artist": "Matchbox Twenty",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Back 2 Good",
+    "artist": "Matchbox Twenty",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Callin' Baton Rouge",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Rodeo",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Reckless (Don't Be So...)",
+    "artist": "Australian Crawl",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Sharp Dressed Man",
+    "artist": "ZZ Top",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Riders on the Storm",
+    "artist": "The Doors",
+    "genre": "Unknown"
+  },
+  {
+    "title": "My Kinda Saturday Night",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "The Sound of Silence",
+    "artist": "Disturbed",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Only Wanna Be with You",
+    "artist": "Hootie & the Blowfish",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Wagon Wheel",
+    "artist": "Darius Rucker",
+    "genre": "Unknown"
+  },
+  {
+    "title": "The Fever",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Copperhead Road",
+    "artist": "Steve Earle",
+    "genre": "Unknown"
+  },
+  {
+    "title": "The Gambler",
+    "artist": "Kenny Rogers",
+    "genre": "Unknown"
+  },
+  {
+    "title": "All Summer Long",
+    "artist": "Kid Rock",
+    "genre": "Unknown"
+  },
+  {
+    "title": "All for You",
+    "artist": "Sister Hazel",
+    "genre": "Unknown"
+  },
+  {
+    "title": "American Honky-Tonk Bar Association",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Piss Up a Rope",
+    "artist": "Ween",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Chattahoochee (Short version)",
+    "artist": "Alan Jackson",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Tall Tall Trees",
+    "artist": "Alan Jackson",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Hand Me Down",
+    "artist": "Matchbox Twenty",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Bent",
+    "artist": "Matchbox Twenty",
+    "genre": "Unknown"
+  },
+  {
+    "title": "We Bury the Hatchet",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "She Got the Best of Me",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Never Tear Us Apart",
+    "artist": "INXS",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Achy Breaky Heart",
+    "artist": "Billy Ray Cyrus",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Eagle Rock",
+    "artist": "Daddy Cool",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Times Like These",
+    "artist": "Foo Fighters",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Crazy Little Thing Called Love",
     "artist": "Queen",
-    "genre": "Rock"
+    "genre": "Unknown"
   },
   {
-    "title": "Livin' on a Prayer",
-    "artist": "Bon Jovi",
-    "genre": "Rock"
+    "title": "Something Like That",
+    "artist": "Tim McGraw",
+    "genre": "Unknown"
   },
   {
-    "title": "Hotel California",
-    "artist": "Eagles",
-    "genre": "Rock"
+    "title": "Cat's in the Cradle",
+    "artist": "Ugly Kid Joe",
+    "genre": "Unknown"
   },
   {
     "title": "Dreams",
     "artist": "Fleetwood Mac",
-    "genre": "Classic Rock"
+    "genre": "Unknown"
   },
   {
-    "title": "Take Me Home, Country Roads",
-    "artist": "John Denver",
-    "genre": "Country"
+    "title": "Cocaine",
+    "artist": "Eric Clapton",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Hey Ya! (Radio Mix - Club Mix)",
+    "artist": "OutKast",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Shape of You",
+    "artist": "Ed Sheeran",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Chasin' That Neon Rainbow",
+    "artist": "Alan Jackson",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Elegantly Wasted",
+    "artist": "INXS",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Kiss Off",
+    "artist": "The Violent Femmes",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Tush",
+    "artist": "ZZ Top",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Back in the Saddle",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Alcohol of Fame",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Jesus of Suburbia",
+    "artist": "Green Day",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Mystify",
+    "artist": "INXS",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Kryptonite",
+    "artist": "3 Doors Down",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Santa Monica (Watch The World Die)",
+    "artist": "Everclear",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Brown Eyed Girl",
+    "artist": "Van Morrison",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Blister in the Sun",
+    "artist": "The Violent Femmes",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Honky Tonk Highway",
+    "artist": "Luke Combs",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Everlong",
+    "artist": "Foo Fighters",
+    "genre": "Unknown"
+  },
+  {
+    "title": "My Hero",
+    "artist": "Foo Fighters",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Friends in Low Places",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Dumb Things",
+    "artist": "Paul Kelly",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Sweet Caroline",
+    "artist": "Neil Diamond",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Drive (For Daddy Gene)",
+    "artist": "Alan Jackson",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Boy Named Sue",
+    "artist": "Johnny Cash",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Ain't Going Down ('Til the Sun Comes Up)",
+    "artist": "Garth Brooks",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Ain't No Love in Oklahoma",
+    "artist": "Twisters (2024 film) (Luke Combs)",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Stuck in the Middle with You",
+    "artist": "Stealers Wheel",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Gone Daddy Gone",
+    "artist": "The Violent Femmes",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Talk Dirty to Me",
+    "artist": "Poison",
+    "genre": "Unknown"
+  },
+  {
+    "title": "I'm Shipping Up to Boston",
+    "artist": "Dropkick Murphys",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Better",
+    "artist": "The Screaming Jets",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Roses",
+    "artist": "OutKast & Big Boi",
+    "genre": "Unknown"
+  },
+  {
+    "title": "The Best",
+    "artist": "Tina Turner",
+    "genre": "Unknown"
+  },
+  {
+    "title": "La Grange",
+    "artist": "ZZ Top",
+    "genre": "Unknown"
+  },
+  {
+    "title": "No Love Allowed",
+    "artist": "Rihanna",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Enter Sandman",
+    "artist": "Metallica",
+    "genre": "Unknown"
+  },
+  {
+    "title": "All My Life",
+    "artist": "Foo Fighters",
+    "genre": "Unknown"
+  },
+  {
+    "title": "When I Come Around",
+    "artist": "Green Day",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Choosin' Texas",
+    "artist": "Ella Langley",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Man! I Feel Like a Woman!",
+    "artist": "Shania Twain",
+    "genre": "Unknown"
+  },
+  {
+    "title": "Daddy Lessons",
+    "artist": "Beyoncé",
+    "genre": "Unknown"
   }
 ]
