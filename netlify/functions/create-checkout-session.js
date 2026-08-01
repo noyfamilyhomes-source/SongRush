@@ -3,10 +3,7 @@ import Stripe from "stripe";
 const stripeSecretKey =
   process.env.STRIPE_SECRET_KEY;
 
-const siteUrl =
-  process.env.URL ||
-  process.env.DEPLOY_PRIME_URL ||
-  "http://localhost:8888";
+const siteUrl = "https://getsongrush.netlify.app";
 
 export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
