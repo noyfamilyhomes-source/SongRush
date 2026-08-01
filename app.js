@@ -1497,6 +1497,9 @@ const tvNowPlayingArtist =
 const tvQueueList =
   document.getElementById("tvQueueList");
 
+const tvQrCode =
+  document.getElementById("tvQrCode");
+
 const backFromTvDisplayBtn =
   document.getElementById(
     "backFromTvDisplayBtn"
@@ -2334,8 +2337,57 @@ function renderLiveQueue() {
     }
   );
 }
+function renderTvQrCode() {
+  if (!tvQrCode) {
+    return;
+  }
 
-function renderTvDisplay() {
+  const sessionId =
+    appState.session?.id;
+
+  if (!sessionId) {
+    tvQrCode.innerHTML =
+      '<p class="empty-state">QR code unavailable.</p>';
+
+    return;
+  }
+
+  const qrImageUrl =
+    `/.netlify/functions/generate-qr?session=${encodeURIComponent(
+      sessionId
+    )}`;
+
+  tvQrCode.innerHTML = "";
+
+  const qrImage =
+    document.createElement("img");
+
+  qrImage.src = qrImageUrl;
+  qrImage.alt =
+    `Scan to join SongRush session ${sessionId}`;
+
+  qrImage.width = 300;
+  qrImage.height = 300;
+
+  const instruction =
+    document.createElement("p");
+
+  instruction.textContent =
+    "Scan to request a song or send a Crowd Shout-Out";
+
+  const sessionLabel =
+    document.createElement("p");
+
+  sessionLabel.textContent =
+    `Session: ${sessionId}`;
+
+  tvQrCode.appendChild(qrImage);
+  tvQrCode.appendChild(instruction);
+  tvQrCode.appendChild(sessionLabel);
+}
+
+function renderTvDisplay() {  
+  renderTvQrCode();
   if (
     !tvNowPlayingTitle ||
     !tvNowPlayingArtist ||
