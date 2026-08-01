@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-const siteUrl = "https://songrush.live";
+const siteUrl = "https://getsongrush.netlify.app";
 
 const stripeSecretKey =
   process.env.STRIPE_SECRET_KEY;
