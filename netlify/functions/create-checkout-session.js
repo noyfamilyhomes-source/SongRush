@@ -1,9 +1,9 @@
 import Stripe from "stripe";
 
+const siteUrl = "https://songrush.live";
+
 const stripeSecretKey =
   process.env.STRIPE_SECRET_KEY;
-
-const siteUrl = "https://getsongrush.netlify.app";
 
 export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
