@@ -1,3 +1,4 @@
+
 const QRCode = require("qrcode");
 
 exports.handler = async (event) => {
@@ -11,10 +12,10 @@ exports.handler = async (event) => {
       };
     }
 
-    const appUrl =
-      process.env.PUBLIC_APP_URL ||
-      "https://songrush.live";
-
+const appUrl =
+  
+  "https://getsongrush.netlify.app";
+    
     const qrUrl =
       `${appUrl}?session=${encodeURIComponent(sessionId)}`;
 

@@ -370,20 +370,28 @@ async function loadNowPlayingFromSupabase() {
     "finishCurrentSongBtn"
   );
 
-  if (!titleEl || !artistEl || !finishBtn) {
-    return;
-  }
-
   if (
     !isSupabaseConfigured ||
     !supabase ||
     !appState.session
   ) {
-    titleEl.textContent =
-      "Nothing currently playing";
+    appState.liveQueue.nowPlaying = {
+      title: "Nothing currently playing",
+      artist: "",
+    };
 
-    artistEl.textContent = "";
-    finishBtn.hidden = true;
+    if (titleEl) {
+      titleEl.textContent =
+        "Nothing currently playing";
+    }
+
+    if (artistEl) {
+      artistEl.textContent = "";
+    }
+
+    if (finishBtn) {
+      finishBtn.hidden = true;
+    }
 
     return;
   }
@@ -393,7 +401,10 @@ async function loadNowPlayingFromSupabase() {
     .select(
       "id, song_title, artist, status, created_at"
     )
-    .eq("session_id", appState.session.id)
+    .eq(
+      "session_id",
+      appState.session.id
+    )
     .eq("status", "playing")
     .order("created_at", {
       ascending: false,
@@ -411,54 +422,71 @@ async function loadNowPlayingFromSupabase() {
   }
 
   if (!data) {
-    titleEl.textContent =
-      "Nothing currently playing";
-
-    artistEl.textContent = "";
-    finishBtn.hidden = true;
-
     appState.liveQueue.nowPlaying = {
       title: "Nothing currently playing",
       artist: "",
     };
 
-    if (appState.currentView === "tvDisplay") {
-      renderTvDisplay();
+    if (titleEl) {
+      titleEl.textContent =
+        "Nothing currently playing";
     }
 
-    return;
+    if (artistEl) {
+      artistEl.textContent = "";
+    }
+
+    if (finishBtn) {
+      finishBtn.hidden = true;
+    }
+  } else {
+    appState.liveQueue.nowPlaying = {
+      title: data.song_title,
+      artist: data.artist || "",
+    };
+
+    if (titleEl) {
+      titleEl.textContent =
+        data.song_title;
+    }
+
+    if (artistEl) {
+      artistEl.textContent =
+        data.artist || "";
+    }
+
+    if (finishBtn) {
+      finishBtn.hidden = false;
+    }
   }
 
-  titleEl.textContent = data.song_title;
-  artistEl.textContent = data.artist || "";
-  finishBtn.hidden = false;
+  if (
+    appState.currentView === "songSearch" &&
+    appState.songs.length > 0
+  ) {
+    renderSongs(songSearchInput.value);
+  }
 
-  appState.liveQueue.nowPlaying = {
-    title: data.song_title,
-    artist: data.artist || "",
-  };
-
-  if (appState.currentView === "tvDisplay") {
+  if (
+    appState.currentView === "tvDisplay"
+  ) {
     renderTvDisplay();
   }
 }
 
 async function loadPlayedTonightFromSupabase() {
-  const playedTonightList = document.getElementById(
-    "playedTonightList"
-  );
+const playedTonightList =
+  document.getElementById("playedTonightList");
 
-  if (!playedTonightList) {
-    return;
-  }
-
-  if (!isSupabaseConfigured || !supabase) {
+if (!isSupabaseConfigured || !supabase) {
+  if (playedTonightList) {
     playedTonightList.innerHTML =
       '<p class="empty-state">No songs played tonight.</p>';
-
-    return;
   }
 
+  appState.playedSongs = [];
+  return;
+}
   const { data, error } = await supabase
     .from("song_requests")
     .select(
@@ -470,36 +498,39 @@ async function loadPlayedTonightFromSupabase() {
       ascending: false,
     });
 
-  if (error) {
-    console.error(
-      "Unable to load played songs",
-      error
-    );
-
-    playedTonightList.innerHTML =
-      '<p class="empty-state">Unable to load played songs.</p>';
-
-    appState.playedSongs = [];
-
-    return;
-  }
-
-  appState.playedSongs = (data || []).map(
-    (song) => ({
-      title: song.song_title,
-      artist: song.artist || "",
-    })
+if (error) {
+  console.error(
+    "Unable to load played songs",
+    error
   );
 
-  if (
-    appState.currentView === "songSearch" &&
-    appState.songs.length > 0
-  ) {
-    renderSongs(songSearchInput.value);
+  if (playedTonightList) {
+    playedTonightList.innerHTML =
+      '<p class="empty-state">Unable to load played songs.</p>';
   }
 
-  playedTonightList.innerHTML = "";
+  appState.playedSongs = [];
 
+  return;
+}
+
+appState.playedSongs = (data || []).map((song) => ({
+  title: song.song_title,
+  artist: song.artist || "",
+}));
+
+if (
+  appState.currentView === "songSearch" &&
+  appState.songs.length > 0
+) {
+  renderSongs(songSearchInput.value);
+}
+
+if (!playedTonightList) {
+  return;
+}
+
+playedTonightList.innerHTML = "";
   if (!data || data.length === 0) {
     playedTonightList.innerHTML =
       '<p class="empty-state">No songs played tonight.</p>';
@@ -1364,23 +1395,27 @@ function renderSongs(filter = "") {
           .trim()
           .toLowerCase();
 
-    const hasBeenPlayed =
-      appState.playedSongs.some(
-        (playedSong) =>
-          normaliseSongText(
-            playedSong.title
-          ) ===
-            normaliseSongText(
-              song.title
-            ) &&
-          normaliseSongText(
-            playedSong.artist
-          ) ===
-            normaliseSongText(
-              song.artist
-            )
-      );
-
+const hasBeenPlayed =
+  appState.playedSongs.some(
+    (playedSong) =>
+      normaliseSongText(playedSong.title) ===
+        normaliseSongText(song.title) &&
+      normaliseSongText(playedSong.artist) ===
+        normaliseSongText(song.artist)
+  ) ||
+  appState.queue.some(
+    (requestedSong) =>
+      normaliseSongText(requestedSong.title) ===
+        normaliseSongText(song.title) &&
+      normaliseSongText(requestedSong.artist) ===
+        normaliseSongText(song.artist)
+  ) ||
+  (
+    normaliseSongText(appState.liveQueue.nowPlaying?.title) ===
+      normaliseSongText(song.title) &&
+    normaliseSongText(appState.liveQueue.nowPlaying?.artist) ===
+      normaliseSongText(song.artist)
+  );
     const button =
       document.createElement("button");
 
@@ -3025,16 +3060,30 @@ async function loadActiveSessionFromSupabase() {
 
   renderSessionUi();
 }
-
 async function initialiseSongRush() {
-  await loadActiveSessionFromSupabase();
-  await loadSessionSettingsFromSupabase();
-  await loadSongs();
-
   const urlParams =
     new URLSearchParams(
       window.location.search
     );
+
+  const sessionFromQr =
+    urlParams.get("session");
+
+  if (sessionFromQr) {
+    appState.session.id = sessionFromQr;
+
+    console.log(
+      "Joined session from QR:",
+      sessionFromQr
+    );
+  } else {
+    await loadActiveSessionFromSupabase();
+  }
+
+await loadSessionSettingsFromSupabase();
+await loadRequestsFromSupabase();
+await loadNowPlayingFromSupabase();
+await loadSongs();
 
   const paymentStatus =
     urlParams.get("payment");
@@ -3057,3 +3106,4 @@ async function initialiseSongRush() {
 }
 
 initialiseSongRush();
+
