@@ -285,6 +285,7 @@ let barRushSubscription = null;
 let barRushPhaseTimer = null;
 const SCREEN_MESSAGE_DISPLAY_MS = 60_000;
 const BAR_RUSH_FULLSCREEN_MS = 30_000;
+const SESSION_INACTIVITY_MS = 3 * 60 * 60 * 1000;
 
 const appState = {
   session: {
@@ -297,6 +298,7 @@ const appState = {
     requestsOpen: true,
     allowRepeats: true,
     startTime: "7:30 PM",
+    updatedAt: null,
     setlist: null,
   },
 
@@ -1144,7 +1146,9 @@ function showSongList() {
   songSearchInput.focus();
 }
 
-function showDashboard() {
+async function showDashboard() {
+  await refreshExpiredSession();
+
   appState.currentView = "dashboard";
 
   hideAllPages();
@@ -1163,8 +1167,36 @@ function showDashboard() {
   subscribeToQueueChanges();
   subscribeToSessionSettingsChanges();
 
-  if (urlParams.get("view") === "customer") {
-    showSongList();
+}
+
+async function refreshExpiredSession() {
+  let lastActivity = appState.session.updatedAt
+    ? new Date(appState.session.updatedAt).getTime()
+    : Date.now();
+
+  if (isSupabaseConfigured && supabase) {
+    const { data: latestRequest } = await supabase
+      .from("song_requests")
+      .select("created_at")
+      .eq("session_id", appState.session.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const latestRequestTime = latestRequest?.created_at
+      ? new Date(latestRequest.created_at).getTime()
+      : 0;
+
+    if (Number.isFinite(latestRequestTime)) {
+      lastActivity = Math.max(lastActivity, latestRequestTime);
+    }
+  }
+
+  if (
+    Number.isFinite(lastActivity) &&
+    Date.now() - lastActivity >= SESSION_INACTIVITY_MS
+  ) {
+    await startNewSession();
   }
 }
 
@@ -3538,7 +3570,7 @@ async function startNewSession() {
         error
       );
 
-      return;
+      return false;
     }
   }
 
@@ -3556,6 +3588,7 @@ async function startNewSession() {
         minute: "2-digit",
       }
     ),
+    updatedAt: new Date().toISOString(),
   };
 
   appState.queue = [];
@@ -3582,6 +3615,8 @@ async function startNewSession() {
 
   subscribeToQueueChanges();
   subscribeToSessionSettingsChanges();
+
+  return true;
 }
 
 if (toggleRequestsBtn) {
@@ -4030,6 +4065,8 @@ async function loadActiveSessionFromSupabase() {
 
   appState.session.requestsOpen =
     data.requests_open;
+
+  appState.session.updatedAt = data.updated_at;
 
   appState.session.setlist = Array.isArray(data.setlist)
     ? data.setlist
