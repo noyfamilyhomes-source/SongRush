@@ -4,20 +4,20 @@ function getRequestTypeDetails(optionValue) {
   const requestTypes = {
     standard: {
       label: "Add to Queue",
-      price: "$5",
-      amount: 5,
+      price: "$10",
+      amount: 10,
     },
 
     replay: {
       label: "Play It Again",
-      price: "$20",
-      amount: 20,
+      price: "$50",
+      amount: 50,
     },
 
     jump: {
       label: "Add to Front Queue",
-      price: "$15",
-      amount: 15,
+      price: "$20",
+      amount: 20,
     },
 
     outbid: {
@@ -130,7 +130,7 @@ const appState = {
       title: "Wonderwall",
       artist: "Oasis",
       type: "Standard Request",
-      price: "$5",
+      price: "$10",
     },
 
     {
@@ -138,7 +138,7 @@ const appState = {
       title: "Horses",
       artist: "Daryl Braithwaite",
       type: "Play It Again",
-      price: "$20",
+      price: "$50",
     },
 
     {
@@ -146,7 +146,7 @@ const appState = {
       title: "Sweet Child O' Mine",
       artist: "Guns N' Roses",
       type: "Jump the Queue",
-      price: "$15",
+      price: "$20",
     },
   ],
 
@@ -1432,7 +1432,7 @@ const hasBeenPlayed =
       button.disabled = true;
     } else if (hasBeenPlayed) {
       button.textContent =
-        "🔁 Play It Again — $20";
+        "🔁 Play It Again — $50";
 
       button.addEventListener(
         "click",
@@ -1475,7 +1475,7 @@ const hasBeenPlayed =
             button.disabled = false;
 
             button.textContent =
-              "🔁 Play It Again — $20";
+              "🔁 Play It Again — $50";
 
             alert(
               "Payment could not start. Please try again."
@@ -1485,7 +1485,7 @@ const hasBeenPlayed =
       );
     } else {
       button.textContent =
-        "🎵 Request Song — $5";
+        "🎵 Request Song — $10";
 
       button.addEventListener(
         "click",
@@ -3106,4 +3106,3 @@ await loadSongs();
 }
 
 initialiseSongRush();
-

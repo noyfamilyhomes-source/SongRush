@@ -116,6 +116,44 @@ button:disabled {
     width: 100%;
 }
 
+.audience-entry {
+    margin-top: 28px;
+    padding: 20px;
+    border: 1px solid rgba(157, 92, 255, 0.4);
+    border-radius: 18px;
+    background: linear-gradient(
+        135deg,
+        rgba(157, 92, 255, 0.16),
+        rgba(255, 255, 255, 0.04)
+    );
+}
+
+.audience-entry #joinButton {
+    width: 100%;
+    min-height: 58px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.audience-entry p {
+    margin: 12px 0 0;
+    font-size: 14px;
+}
+
+.performer-entry {
+    margin-top: 30px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.entry-label {
+    margin-bottom: 12px;
+    color: #c8a7ff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+}
+
 .secondary-btn {
     background: rgba(255, 255, 255, 0.08);
     color: white;
@@ -782,12 +820,39 @@ button:disabled:hover {
 }
 /* ---------- TV Display ---------- */
 
+#tvDisplayPage {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
 #tvDisplayPage .live-queue-card {
     position: relative;
+    width: 100%;
     max-width: 1100px;
     margin: 0 auto;
     text-align: center;
     padding: 48px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#tvNormalDisplay {
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+#tvDisplayPage .now-playing-card {
+    justify-content: center;
+    text-align: center;
+}
+
+#tvDisplayPage .now-playing-card > div:last-child {
+    min-width: 0;
+    max-width: 100%;
 }
 
 #backFromTvDisplayBtn {
@@ -814,6 +879,9 @@ button:disabled:hover {
     font-size: 3rem;
     font-weight: 700;
     margin: 0;
+    max-width: 100%;
+    line-height: 1.08;
+    overflow-wrap: anywhere;
 }
 
 #tvNowPlayingArtist {
@@ -824,22 +892,87 @@ button:disabled:hover {
 
 #tvQueueList {
     list-style: none;
+    width: 100%;
     margin: 30px 0;
     padding: 0;
+    text-align: center;
 }
 
 #tvQueueList li {
     font-size: 2rem;
     padding: 18px 0;
     border-bottom: 1px solid rgba(255,255,255,0.08);
+    overflow-wrap: anywhere;
 }
 
 #tvQrCode {
-    width: 220px;
-    height: 220px;
+    width: min(100%, 340px);
+    height: auto;
     margin: 40px auto 0;
-    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 18px;
+}
+
+#tvQrCode img {
+    display: block;
+    width: min(100%, 300px);
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+}
+
+#tvQrCode p {
+    max-width: 300px;
+    margin: 14px auto 0;
+    text-align: center;
+}
+
+#tvQrCode p + p {
+    margin-top: 6px;
+    opacity: 0.75;
+}
+
+@media (max-width: 700px) {
+    #tvDisplayPage .live-queue-card {
+        padding: 72px 14px 28px;
+    }
+
+    #tvDisplayPage h1 {
+        font-size: clamp(2.25rem, 11vw, 3.25rem);
+        line-height: 1;
+        overflow-wrap: anywhere;
+    }
+
+    #tvDisplayPage .section-label {
+        font-size: 1rem;
+        letter-spacing: 0.18em;
+    }
+
+    #tvDisplayPage .now-playing-card {
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px 14px;
+    }
+
+    #tvNowPlayingTitle {
+        font-size: clamp(1.65rem, 8vw, 2.25rem);
+    }
+
+    #tvNowPlayingArtist {
+        font-size: clamp(1.15rem, 5.5vw, 1.6rem);
+    }
+
+    #tvQueueList li {
+        font-size: clamp(1.2rem, 5.5vw, 1.6rem);
+    }
 }
 /* ---------- Bar Rush TV ---------- */
 
