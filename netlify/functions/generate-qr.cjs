@@ -56,7 +56,7 @@ function addSongRushLiveLogo(svg) {
 exports.handler = async (event) => {
   try {
     const sessionId = event.queryStringParameters?.session;
-
+https://crowdrush.com.au/
     if (!sessionId) {
       return {
         statusCode: 400,
@@ -66,7 +66,7 @@ exports.handler = async (event) => {
 
 const appUrl =
   
-  "https://getsongrush.netlify.app";
+  "${appUrl}?session=${encodeURIComponent(sessionId)}&view=customer";
     
     const qrUrl =
       `${appUrl}?session=${encodeURIComponent(sessionId)}`;
