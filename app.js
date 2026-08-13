@@ -4065,4 +4065,3 @@ if (new URLSearchParams(window.location.search).get("view") === "customer") {
     window.setTimeout(showSongList, 700);
   });
 }
-const SCREEN_MESSAGE_DISPLAY_MS = 60_000;
