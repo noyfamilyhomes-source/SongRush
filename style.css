@@ -309,12 +309,20 @@ button:disabled {
     font-weight: 700;
 }
 
-.audience-entry .audience-secondary-btn {
+.customer-actions {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid rgba(157, 92, 255, 0.32);
+    border-radius: 16px;
+    background: rgba(157, 92, 255, 0.08);
+}
+
+.customer-actions .customer-action-btn {
     width: 100%;
     margin-top: 12px;
 }
 
-.audience-entry .beer-btn {
+.customer-actions .beer-btn {
     border: 1px solid rgba(255, 204, 102, 0.42);
     background: linear-gradient(
         135deg,
@@ -323,7 +331,7 @@ button:disabled {
     );
 }
 
-.audience-entry .beer-btn:hover {
+.customer-actions .beer-btn:hover {
     background: linear-gradient(
         135deg,
         rgba(255, 180, 70, 0.34),
