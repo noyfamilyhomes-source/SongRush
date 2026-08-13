@@ -468,7 +468,19 @@
             </button>
 
             <div id="tvNormalDisplay">
-                <h1>🎸 SongRush</h1>
+                <div class="tv-brand-hero">
+                    <div class="tv-brand-copy">
+                        <div class="tv-live-label">LIVE MUSIC</div>
+                        <h1>🎸 SongRush</h1>
+                        <p>You pick. We play.</p>
+                    </div>
+
+                    <img
+                        class="tv-andy"
+                        src="assets/andy.png"
+                        alt="Andy, the SongRush live-music guide"
+                    >
+                </div>
 
                 <div class="section-label">
                     NOW PLAYING
@@ -500,6 +512,18 @@
                 </div>
 
                 <div id="tvQrCode"></div>
+
+                <div
+                    id="tvBarRushCorner"
+                    class="tv-bar-rush-corner hidden"
+                    aria-live="polite"
+                >
+                    <span class="tv-bar-rush-corner-icon">🍻</span>
+                    <span>
+                        <strong>BAR RUSH</strong>
+                        <span id="tvBarRushCornerOffer">Special Offer</span>
+                    </span>
+                </div>
             </div>
 
             <div
@@ -522,6 +546,17 @@
                 <p id="tvBarRushCountdown">
                     Ending soon
                 </p>
+            </div>
+
+            <div
+                id="tvShoutOutPanel"
+                class="tv-shout-out-panel hidden"
+                aria-live="assertive"
+            >
+                <div class="tv-shout-out-icon">📣</div>
+                <div class="tv-shout-out-label">CROWD SHOUT-OUT</div>
+                <blockquote id="tvShoutOutMessage"></blockquote>
+                <p id="tvShoutOutName"></p>
             </div>
         </div>
     </div>

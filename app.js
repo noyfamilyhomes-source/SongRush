@@ -279,6 +279,12 @@ async function startStripeCheckout(song, optionValue) {
 
 let queueSubscription = null;
 let sessionSettingsSubscription = null;
+let screenMessageSubscription = null;
+let screenMessageTimer = null;
+let barRushSubscription = null;
+let barRushPhaseTimer = null;
+const SCREEN_MESSAGE_DISPLAY_MS = 30_000;
+const BAR_RUSH_FULLSCREEN_MS = 30_000;
 
 const appState = {
   session: {
@@ -298,6 +304,7 @@ const appState = {
   playedSongs: [],
   selectedSong: null,
   currentView: "landing",
+  activeScreenMessage: null,
 
   queue: [
     {
@@ -819,6 +826,103 @@ function subscribeToQueueChanges() {
           appState.currentView === "tvDisplay"
         ) {
           await loadTvDisplayFromSupabase();
+        }
+      }
+    )
+    .subscribe();
+}
+
+function hideTvScreenMessage() {
+  if (screenMessageTimer) {
+    window.clearTimeout(screenMessageTimer);
+    screenMessageTimer = null;
+  }
+
+  appState.activeScreenMessage = null;
+  renderTvDisplay();
+}
+
+function showTvScreenMessage(screenMessage) {
+  if (!screenMessage?.message) {
+    return;
+  }
+
+  const createdAt = new Date(
+    screenMessage.created_at || Date.now()
+  ).getTime();
+
+  const remaining = Math.min(
+    SCREEN_MESSAGE_DISPLAY_MS,
+    createdAt + SCREEN_MESSAGE_DISPLAY_MS - Date.now()
+  );
+
+  if (remaining <= 0) {
+    return;
+  }
+
+  if (screenMessageTimer) {
+    window.clearTimeout(screenMessageTimer);
+  }
+
+  appState.activeScreenMessage = screenMessage;
+  renderTvDisplay();
+
+  screenMessageTimer = window.setTimeout(
+    hideTvScreenMessage,
+    remaining
+  );
+}
+
+async function loadLatestTvScreenMessage() {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+
+  const cutoff = new Date(
+    Date.now() - SCREEN_MESSAGE_DISPLAY_MS
+  ).toISOString();
+
+  const { data, error } = await supabase
+    .from("screen_messages")
+    .select("id, session_id, customer_name, message, created_at")
+    .eq("session_id", appState.session.id)
+    .gte("created_at", cutoff)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Unable to load Crowd Shout-Out", error);
+    return;
+  }
+
+  if (data) {
+    showTvScreenMessage(data);
+  }
+}
+
+function subscribeToScreenMessages() {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+
+  if (screenMessageSubscription) {
+    supabase.removeChannel(screenMessageSubscription);
+  }
+
+  screenMessageSubscription = supabase
+    .channel(`screen-messages-${appState.session.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "screen_messages",
+        filter: `session_id=eq.${appState.session.id}`,
+      },
+      (payload) => {
+        if (appState.currentView === "tvDisplay") {
+          showTvScreenMessage(payload.new);
         }
       }
     )
@@ -1406,6 +1510,8 @@ async function loadTvDisplayFromSupabase() {
   appState.barRush =
     barRush || null;
 
+  scheduleBarRushPhaseChange();
+
   const {
     data: pendingQueue,
     error: queueError,
@@ -1489,6 +1595,78 @@ async function loadTvDisplayFromSupabase() {
 
   renderTvDisplay();
 }
+
+function scheduleBarRushPhaseChange() {
+  if (barRushPhaseTimer) {
+    window.clearTimeout(barRushPhaseTimer);
+    barRushPhaseTimer = null;
+  }
+
+  if (!appState.barRush) {
+    return;
+  }
+
+  const createdAt = new Date(
+    appState.barRush.created_at || Date.now()
+  ).getTime();
+
+  const expiresAt = new Date(
+    appState.barRush.expires_at
+  ).getTime();
+
+  const nextChange = Date.now() < createdAt + BAR_RUSH_FULLSCREEN_MS
+    ? createdAt + BAR_RUSH_FULLSCREEN_MS
+    : expiresAt;
+
+  const delay = nextChange - Date.now();
+
+  if (delay <= 0) {
+    if (Date.now() >= expiresAt) {
+      appState.barRush = null;
+    }
+    return;
+  }
+
+  barRushPhaseTimer = window.setTimeout(() => {
+    if (
+      appState.barRush &&
+      Date.now() >= new Date(appState.barRush.expires_at).getTime()
+    ) {
+      appState.barRush = null;
+    }
+
+    renderTvDisplay();
+    scheduleBarRushPhaseChange();
+  }, delay);
+}
+
+function subscribeToBarRushChanges() {
+  if (!isSupabaseConfigured || !supabase) {
+    return;
+  }
+
+  if (barRushSubscription) {
+    supabase.removeChannel(barRushSubscription);
+  }
+
+  barRushSubscription = supabase
+    .channel(`bar-rush-${appState.session.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "bar_rush_announcements",
+        filter: `session_id=eq.${appState.session.id}`,
+      },
+      async () => {
+        if (appState.currentView === "tvDisplay") {
+          await loadTvDisplayFromSupabase();
+        }
+      }
+    )
+    .subscribe();
+}
 function showLiveQueueScreen(
   song = null
 ) {
@@ -1538,8 +1716,11 @@ function showTvDisplay() {
 
   renderTvDisplay();
   loadTvDisplayFromSupabase();
+  loadLatestTvScreenMessage();
 
   subscribeToQueueChanges();
+  subscribeToScreenMessages();
+  subscribeToBarRushChanges();
 }
 
 function showSuccessScreen(song) {
@@ -3101,6 +3282,21 @@ function renderTvDisplay() {
       "tvBarRushPanel"
     );
 
+  const barRushCorner =
+    document.getElementById("tvBarRushCorner");
+
+  const barRushCornerOffer =
+    document.getElementById("tvBarRushCornerOffer");
+
+  const shoutOutPanel =
+    document.getElementById("tvShoutOutPanel");
+
+  const shoutOutMessage =
+    document.getElementById("tvShoutOutMessage");
+
+  const shoutOutName =
+    document.getElementById("tvShoutOutName");
+
   const offerEl =
     document.getElementById(
       "tvBarRushOffer"
@@ -3111,8 +3307,25 @@ function renderTvDisplay() {
       "tvBarRushCountdown"
     );
 
+  const barRushCreatedAt = appState.barRush
+    ? new Date(appState.barRush.created_at || Date.now()).getTime()
+    : 0;
+
+  const barRushExpiresAt = appState.barRush
+    ? new Date(appState.barRush.expires_at).getTime()
+    : 0;
+
+  const barRushIsActive = Boolean(
+    appState.barRush && barRushExpiresAt > Date.now()
+  );
+
+  const barRushIsFullscreen = Boolean(
+    barRushIsActive &&
+    Date.now() < barRushCreatedAt + BAR_RUSH_FULLSCREEN_MS
+  );
+
   if (
-    appState.barRush &&
+    barRushIsFullscreen &&
     normalDisplay &&
     barRushPanel
   ) {
@@ -3123,6 +3336,9 @@ function renderTvDisplay() {
     barRushPanel.classList.remove(
       "hidden"
     );
+
+    shoutOutPanel?.classList.add("hidden");
+    barRushCorner?.classList.add("hidden");
 
     if (offerEl) {
       offerEl.textContent =
@@ -3152,6 +3368,34 @@ function renderTvDisplay() {
     return;
   }
 
+  if (
+    appState.activeScreenMessage &&
+    normalDisplay &&
+    shoutOutPanel
+  ) {
+    normalDisplay.classList.add("hidden");
+    barRushPanel?.classList.add("hidden");
+    barRushCorner?.classList.add("hidden");
+    shoutOutPanel.classList.remove("hidden");
+
+    if (shoutOutMessage) {
+      shoutOutMessage.textContent =
+        appState.activeScreenMessage.message;
+    }
+
+    if (shoutOutName) {
+      const customerName = String(
+        appState.activeScreenMessage.customer_name || ""
+      ).trim();
+
+      shoutOutName.textContent = customerName
+        ? `— ${customerName}`
+        : "— From the crowd";
+    }
+
+    return;
+  }
+
   if (normalDisplay) {
     normalDisplay.classList.remove(
       "hidden"
@@ -3162,6 +3406,20 @@ function renderTvDisplay() {
     barRushPanel.classList.add(
       "hidden"
     );
+  }
+
+  shoutOutPanel?.classList.add("hidden");
+
+  if (barRushCorner) {
+    barRushCorner.classList.toggle(
+      "hidden",
+      !barRushIsActive
+    );
+  }
+
+  if (barRushCornerOffer && barRushIsActive) {
+    barRushCornerOffer.textContent =
+      appState.barRush.offer_text;
   }
 
   tvNowPlayingTitle.textContent =
