@@ -2156,15 +2156,28 @@ async function saveSetlist(songs, message) {
     throw new Error("The live database is not connected.");
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("songrush_sessions")
-    .update({ setlist: cleanedSongs })
-    .eq("session_id", appState.session.id);
+    .update({
+      setlist: cleanedSongs,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("session_id", appState.session.id)
+    .select("session_id, setlist")
+    .maybeSingle();
 
   if (error) throw error;
 
-  appState.session.setlist = cleanedSongs;
-  appState.songs = cleanedSongs;
+  if (!data) {
+    throw new Error("The active session could not be updated.");
+  }
+
+  const savedSongs = Array.isArray(data.setlist)
+    ? data.setlist
+    : cleanedSongs;
+
+  appState.session.setlist = savedSongs;
+  appState.songs = savedSongs;
   renderSongs(songSearchInput.value);
   renderSetlistManager();
   setlistManagerStatus.textContent = message;
@@ -2276,6 +2289,9 @@ removeSelectedSongsBtn?.addEventListener("click", async () => {
   if (selected.size === 0) return;
   if (!window.confirm(`Remove ${selected.size} selected song${selected.size === 1 ? "" : "s"}?`)) return;
 
+  removeSelectedSongsBtn.disabled = true;
+  removeSelectedSongsBtn.textContent = "Removing...";
+
   try {
     await saveSetlist(
       appState.songs.filter((_, index) => !selected.has(index)),
@@ -2284,6 +2300,12 @@ removeSelectedSongsBtn?.addEventListener("click", async () => {
   } catch (error) {
     console.error("Unable to remove selected songs", error);
     setlistManagerStatus.textContent = "The selected songs could not be removed.";
+  } finally {
+    removeSelectedSongsBtn.textContent = "Remove Selected Songs";
+    removeSelectedSongsBtn.disabled =
+      setlistManagerList.querySelectorAll(
+        'input[type="checkbox"]:checked'
+      ).length === 0;
   }
 });
 
@@ -2291,11 +2313,17 @@ removeAllSetlistBtn?.addEventListener("click", async () => {
   if (appState.songs.length === 0) return;
   if (!window.confirm(`Remove all ${appState.songs.length} songs from tonight's setlist?`)) return;
 
+  removeAllSetlistBtn.disabled = true;
+  removeAllSetlistBtn.textContent = "Removing...";
+
   try {
     await saveSetlist([], "All setlist songs removed.");
   } catch (error) {
     console.error("Unable to remove setlist", error);
     setlistManagerStatus.textContent = "The setlist could not be cleared.";
+  } finally {
+    removeAllSetlistBtn.textContent = "Remove All Setlist Songs";
+    removeAllSetlistBtn.disabled = appState.songs.length === 0;
   }
 });
 joinButton.addEventListener(
