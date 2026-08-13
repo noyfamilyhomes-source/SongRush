@@ -135,7 +135,26 @@ async function validateAccessPin(pin, area) {
     );
   }
 
-  return true;
+  return data;
+}
+
+async function runPerformerAction(action, details = {}) {
+  const access = getProtectedAccess("dashboard");
+  if (!access?.token) {
+    throw new Error("Performer access expired. Unlock the dashboard again.");
+  }
+
+  const response = await fetch("/.netlify/functions/performer-action", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${access.token}`,
+    },
+    body: JSON.stringify({ action, sessionId: appState.session.id, ...details }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "The performer change could not be saved.");
+  return data.data;
 }
 
 async function startBeerShoutCheckout() {
@@ -2192,12 +2211,15 @@ venueNameForm?.addEventListener("submit", async (event) => {
   saveVenueNameBtn.textContent = "Saving...";
   venueNameStatus.textContent = "";
 
-  const { data, error } = await supabase
-    .from("songrush_sessions")
-    .update({ venue_name: venueName, updated_at: new Date().toISOString() })
-    .eq("session_id", appState.session.id)
-    .select("session_id, venue_name")
-    .maybeSingle();
+  let data;
+  let error;
+  try {
+    data = await runPerformerAction("update_session", {
+      changes: { venue_name: venueName },
+    });
+  } catch (caughtError) {
+    error = caughtError;
+  }
 
   if (error || !data) {
     console.error("Unable to save venue name", error);
@@ -2240,15 +2262,15 @@ async function saveSetlist(songs, message) {
     throw new Error("The live database is not connected.");
   }
 
-  const { data, error } = await supabase
-    .from("songrush_sessions")
-    .update({
-      setlist: cleanedSongs,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("session_id", appState.session.id)
-    .select("session_id, setlist")
-    .maybeSingle();
+  let data;
+  let error;
+  try {
+    data = await runPerformerAction("update_session", {
+      changes: { setlist: cleanedSongs },
+    });
+  } catch (caughtError) {
+    error = caughtError;
+  }
 
   if (error) throw error;
 
@@ -2517,32 +2539,40 @@ sendShoutOutBtn?.addEventListener("click", async () => {
   }
 });
 
-function hasProtectedAccess(area) {
+function getProtectedAccess(area) {
   try {
-    const unlockedAreas = JSON.parse(
-      sessionStorage.getItem(ACCESS_SESSION_KEY) || "[]"
-    );
-
-    return unlockedAreas.includes(area);
+    const unlockedAreas = JSON.parse(sessionStorage.getItem(ACCESS_SESSION_KEY) || "{}");
+    const access = unlockedAreas[area];
+    return access?.token && access.expiresAt > Date.now() ? access : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-function rememberProtectedAccess(area) {
-  let unlockedAreas = [];
+function hasProtectedAccess(area) {
+  return Boolean(getProtectedAccess(area));
+}
+
+function rememberProtectedAccess(area, validation) {
+  let unlockedAreas = {};
 
   try {
     unlockedAreas = JSON.parse(
-      sessionStorage.getItem(ACCESS_SESSION_KEY) || "[]"
+      sessionStorage.getItem(ACCESS_SESSION_KEY) || "{}"
     );
   } catch {
-    unlockedAreas = [];
+    unlockedAreas = {};
   }
 
   sessionStorage.setItem(
     ACCESS_SESSION_KEY,
-    JSON.stringify([...new Set([...unlockedAreas, area])])
+    JSON.stringify({
+      ...unlockedAreas,
+      [area]: {
+        token: validation.token,
+        expiresAt: Date.now() + validation.expiresIn * 1000,
+      },
+    })
   );
 }
 
@@ -2617,8 +2647,8 @@ submitAccessPinBtn?.addEventListener("click", async () => {
   submitAccessPinBtn.textContent = "Checking...";
 
   try {
-    await validateAccessPin(pin, area);
-    rememberProtectedAccess(area);
+    const validation = await validateAccessPin(pin, area);
+    rememberProtectedAccess(area, validation);
     closeAccessPinModal();
     openProtectedArea(area);
   } catch (error) {
@@ -2787,70 +2817,23 @@ async function moveQueueRequest(
   clickedButton.textContent =
     "Moving...";
 
-  const {
-    error: itemUpdateError,
-  } = await supabase
-    .from("song_requests")
-    .update({
-      queue_order:
-        targetQueueOrder,
-    })
-    .eq("id", item.id)
-    .eq(
-      "session_id",
-      appState.session.id
-    );
+  let itemUpdateError;
+  try {
+    await runPerformerAction("swap_queue", {
+      firstId: item.id,
+      secondId: targetItem.id,
+      firstOrder: itemQueueOrder,
+      secondOrder: targetQueueOrder,
+    });
+  } catch (caughtError) {
+    itemUpdateError = caughtError;
+  }
 
   if (itemUpdateError) {
     console.error(
       "Unable to update moved request",
       itemUpdateError
     );
-
-    await loadRequestsFromSupabase();
-    return;
-  }
-
-  const {
-    error: targetUpdateError,
-  } = await supabase
-    .from("song_requests")
-    .update({
-      queue_order:
-        itemQueueOrder,
-    })
-    .eq("id", targetItem.id)
-    .eq(
-      "session_id",
-      appState.session.id
-    );
-
-  if (targetUpdateError) {
-    console.error(
-      "Unable to update neighbouring request",
-      targetUpdateError
-    );
-
-    const {
-      error: rollbackError,
-    } = await supabase
-      .from("song_requests")
-      .update({
-        queue_order:
-          itemQueueOrder,
-      })
-      .eq("id", item.id)
-      .eq(
-        "session_id",
-        appState.session.id
-      );
-
-    if (rollbackError) {
-      console.error(
-        "Unable to roll back queue movement",
-        rollbackError
-      );
-    }
 
     await loadRequestsFromSupabase();
     return;
@@ -2912,39 +2895,12 @@ function renderQueue() {
             isSupabaseConfigured &&
             supabase
           ) {
-            const {
-              error: completeError,
-            } = await supabase
-              .from("song_requests")
-              .update({
-                status: "completed",
-              })
-              .eq(
-                "session_id",
-                appState.session.id
-              )
-              .eq(
-                "status",
-                "playing"
-              );
-
-            if (completeError) {
-              console.error(
-                "Unable to complete current playing request",
-                completeError
-              );
-
-              return;
+            let playError;
+            try {
+              await runPerformerAction("play_request", { requestId: item.id });
+            } catch (caughtError) {
+              playError = caughtError;
             }
-
-            const {
-              error: playError,
-            } = await supabase
-              .from("song_requests")
-              .update({
-                status: "playing",
-              })
-              .eq("id", item.id);
 
             if (playError) {
               console.error(
@@ -3611,19 +3567,12 @@ async function startNewSession() {
   )}`;
 
   if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase
-      .from("songrush_sessions")
-      .upsert(
-        {
-          session_id: newCode,
-          allow_repeats: true,
-          requests_open: true,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "session_id",
-        }
-      );
+    let error;
+    try {
+      await runPerformerAction("create_session", { sessionId: newCode });
+    } catch (caughtError) {
+      error = caughtError;
+    }
 
     if (error) {
       console.error(
@@ -3699,24 +3648,15 @@ if (toggleRequestsBtn) {
       toggleRequestsBtn.textContent =
         "Saving...";
 
-      const { data, error } =
-        await supabase
-          .from("songrush_sessions")
-          .update({
-            requests_open:
-              newRequestsOpenValue,
-
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq(
-            "session_id",
-            appState.session.id
-          )
-          .select(
-            "session_id, requests_open"
-          )
-          .maybeSingle();
+      let data;
+      let error;
+      try {
+        data = await runPerformerAction("update_session", {
+          changes: { requests_open: newRequestsOpenValue },
+        });
+      } catch (caughtError) {
+        error = caughtError;
+      }
 
       if (error) {
         console.error(
@@ -3783,24 +3723,15 @@ if (allowRepeatsBtn) {
       allowRepeatsBtn.textContent =
         "Saving...";
 
-      const { data, error } =
-        await supabase
-          .from("songrush_sessions")
-          .update({
-            allow_repeats:
-              newAllowRepeatsValue,
-
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq(
-            "session_id",
-            appState.session.id
-          )
-          .select(
-            "session_id, allow_repeats"
-          )
-          .maybeSingle();
+      let data;
+      let error;
+      try {
+        data = await runPerformerAction("update_session", {
+          changes: { allow_repeats: newAllowRepeatsValue },
+        });
+      } catch (caughtError) {
+        error = caughtError;
+      }
 
       if (error) {
         console.error(
@@ -3899,38 +3830,20 @@ if (barRushBtn) {
         return;
       }
 
-      const expiresAt = new Date(
-        Date.now() +
-          durationMinutes *
-            60 *
-            1000
-      ).toISOString();
-
       barRushBtn.disabled = true;
 
       barRushBtn.textContent =
         "Launching Bar Rush...";
 
-      const { error } = await supabase
-        .from(
-          "bar_rush_announcements"
-        )
-        .insert([
-          {
-            session_id:
-              appState.session.id,
-
-            offer_text:
-              offerText.trim(),
-
-            duration_minutes:
-              durationMinutes,
-
-            status: "active",
-
-            expires_at: expiresAt,
-          },
-        ]);
+      let error;
+      try {
+        await runPerformerAction("create_bar_rush", {
+          offerText: offerText.trim(),
+          durationMinutes,
+        });
+      } catch (caughtError) {
+        error = caughtError;
+      }
 
       if (error) {
         console.error(
@@ -3992,16 +3905,12 @@ if (finishCurrentSongBtn) {
       finishCurrentSongBtn.textContent =
         "Finishing...";
 
-      const { error } = await supabase
-        .from("song_requests")
-        .update({
-          status: "completed",
-        })
-        .eq(
-          "session_id",
-          appState.session.id
-        )
-        .eq("status", "playing");
+      let error;
+      try {
+        await runPerformerAction("finish_playing");
+      } catch (caughtError) {
+        error = caughtError;
+      }
 
       if (error) {
         console.error(
