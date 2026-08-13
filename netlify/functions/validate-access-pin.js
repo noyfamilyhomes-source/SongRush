@@ -1,4 +1,7 @@
 import crypto from "node:crypto";
+import protectedAccess from "./protected-access.cjs";
+
+const { createAccessToken } = protectedAccess;
 
 const jsonResponse = (statusCode, body) => ({
   statusCode,
@@ -54,5 +57,21 @@ export const handler = async (event) => {
     return jsonResponse(401, { error: "Incorrect access PIN." });
   }
 
-  return jsonResponse(200, { authorised: true, area });
+  const signingSecret = String(
+    process.env.SONGRUSH_AUTH_SECRET || ""
+  ).trim();
+
+  if (signingSecret.length < 32) {
+    console.error("SONGRUSH_AUTH_SECRET is not configured securely.");
+    return jsonResponse(503, {
+      error: "Secure performer access is not configured yet.",
+    });
+  }
+
+  return jsonResponse(200, {
+    authorised: true,
+    area,
+    token: createAccessToken({ area, secret: signingSecret }),
+    expiresIn: 10800,
+  });
 };
