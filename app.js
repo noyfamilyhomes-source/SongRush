@@ -115,10 +115,24 @@ async function validateAccessPin(pin, area) {
     }
   );
 
-  const data = await response.json();
+  const responseText = await response.text();
+  let data = {};
+
+  if (responseText) {
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        "Performer access is temporarily unavailable. Please try again."
+      );
+    }
+  }
 
   if (!response.ok || !data.authorised) {
-    throw new Error(data.error || "Incorrect access PIN.");
+    throw new Error(
+      data.error ||
+        "Performer access is temporarily unavailable. Please try again."
+    );
   }
 
   return true;
