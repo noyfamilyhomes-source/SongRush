@@ -1,5 +1,165 @@
 import { isSupabaseConfigured, supabase } from "./supabase.js";
 
+const SHOUT_OUT_PRICE = 10;
+const BEER_SHOUT_PRICE = 10;
+const ACCESS_SESSION_KEY = "songrushProtectedAccess";
+const ANDY_TUTORIAL_KEY = "songrushAndyTutorialSeen";
+const ANDY_TUTORIAL_STEPS = [
+  {
+    title: "G'day, I'm Bobble Andy!",
+    text: "I’ll show you how to request songs and join the fun tonight.",
+  },
+  {
+    title: "Join tonight's show",
+    text: "Tap Join Tonight's Show, then search the performer's setlist for a song you love.",
+  },
+  {
+    title: "Choose how it plays",
+    text: "Send a standard request for $10, jump the queue for $20, or ask to hear it again for $50.",
+  },
+  {
+    title: "Make some noise!",
+    text: "You can also send a crowd shout-out or shout the performer a beer. That's it — enjoy the show!",
+  },
+];
+const OFFENSIVE_WORDS = [
+  "fuck",
+  "shit",
+  "cunt",
+  "bitch",
+  "dick",
+  "cock",
+  "nigger",
+  "faggot",
+  "slut",
+  "whore",
+  "rape",
+  "pedo",
+];
+
+function normaliseModerationText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[0@]/g, "o")
+    .replace(/[1!|]/g, "i")
+    .replace(/[3]/g, "e")
+    .replace(/[4]/g, "a")
+    .replace(/[5$]/g, "s")
+    .replace(/[7+]/g, "t");
+}
+
+function containsOffensiveLanguage(value) {
+  const normalised = normaliseModerationText(value);
+  const compact = normalised.replace(/[^a-z]/g, "");
+
+  return OFFENSIVE_WORDS.some((word) => {
+    const boundaryPattern = new RegExp(
+      `(^|[^a-z])${word}([^a-z]|$)`,
+      "i"
+    );
+
+    return (
+      boundaryPattern.test(normalised) ||
+      compact.includes(word)
+    );
+  });
+}
+
+async function startShoutOutCheckout(name, message) {
+  const requestToken =
+    typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `songrush-shout-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2)}`;
+
+  const response = await fetch(
+    "/.netlify/functions/create-checkout-session",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paymentType: "screen_message",
+        amountCents: SHOUT_OUT_PRICE * 100,
+        sessionId: appState.session.id,
+        customerName: name,
+        screenMessage: message,
+        requestToken,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok || !data.url) {
+    throw new Error(
+      data.error || "Unable to start shout-out payment"
+    );
+  }
+
+  window.location.href = data.url;
+}
+
+async function validateAccessPin(pin, area) {
+  const response = await fetch(
+    "/.netlify/functions/validate-access-pin",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ pin, area }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok || !data.authorised) {
+    throw new Error(data.error || "Incorrect access PIN.");
+  }
+
+  return true;
+}
+
+async function startBeerShoutCheckout() {
+  const requestToken =
+    typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `songrush-beer-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2)}`;
+
+  const response = await fetch(
+    "/.netlify/functions/create-checkout-session",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paymentType: "performer_beer",
+        amountCents: BEER_SHOUT_PRICE * 100,
+        sessionId: appState.session.id,
+        performerName: appState.session.performerName,
+        requestToken,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok || !data.url) {
+    throw new Error(
+      data.error || "Unable to start beer payment"
+    );
+  }
+
+  window.location.href = data.url;
+}
+
 function getRequestTypeDetails(optionValue) {
   const requestTypes = {
     standard: {
@@ -117,6 +277,7 @@ const appState = {
     requestsOpen: true,
     allowRepeats: true,
     startTime: "7:30 PM",
+    setlist: null,
   },
 
   songs: [],
@@ -186,6 +347,39 @@ const appState = {
     requests: [],
   },
 };
+
+let andyTutorialStep = 0;
+
+function renderAndyTutorialStep() {
+  const step = ANDY_TUTORIAL_STEPS[andyTutorialStep];
+
+  if (!step || !andyTutorial) {
+    return;
+  }
+
+  andyTutorialTitle.textContent = step.title;
+  andyTutorialText.textContent = step.text;
+  andyStepCount.textContent = `${andyTutorialStep + 1} of ${ANDY_TUTORIAL_STEPS.length}`;
+  andyBackBtn.hidden = andyTutorialStep === 0;
+  andyNextBtn.textContent =
+    andyTutorialStep === ANDY_TUTORIAL_STEPS.length - 1
+      ? "Let's go!"
+      : "Next";
+}
+
+function openAndyTutorial() {
+  andyTutorialStep = 0;
+  renderAndyTutorialStep();
+  andyTutorial.classList.remove("hidden");
+  document.body.classList.add("tutorial-open");
+  andyNextBtn.focus();
+}
+
+function closeAndyTutorial() {
+  localStorage.setItem(ANDY_TUTORIAL_KEY, "true");
+  andyTutorial.classList.add("hidden");
+  document.body.classList.remove("tutorial-open");
+}
 
 function getRequestsStatusLabel() {
   return appState.session.requestsOpen
@@ -727,7 +921,7 @@ async function loadSessionSettingsFromSupabase() {
   const { data, error } = await supabase
     .from("songrush_sessions")
     .select(
-      "allow_repeats, requests_open"
+      "allow_repeats, requests_open, setlist"
     )
     .eq(
       "session_id",
@@ -764,6 +958,12 @@ async function loadSessionSettingsFromSupabase() {
 
   appState.session.requestsOpen =
     data.requests_open;
+
+  if (Array.isArray(data.setlist)) {
+    appState.session.setlist = data.setlist;
+    appState.songs = data.setlist;
+    renderSetlistManager();
+  }
 
   renderSessionUi();
 
@@ -1555,6 +1755,62 @@ const modalArtist =
 const joinButton =
   document.getElementById("joinButton");
 
+const andyTutorial = document.getElementById("andyTutorial");
+const andyTutorialTitle = document.getElementById("andyTutorialTitle");
+const andyTutorialText = document.getElementById("andyTutorialText");
+const andyStepCount = document.getElementById("andyStepCount");
+const andyBackBtn = document.getElementById("andyBackBtn");
+const andyNextBtn = document.getElementById("andyNextBtn");
+const skipAndyTutorial = document.getElementById("skipAndyTutorial");
+const andyHelpButtons = document.querySelectorAll(".andy-help-btn");
+
+const shoutOutButton =
+  document.getElementById("shoutOutButton");
+
+const shoutBeerButton =
+  document.getElementById("shoutBeerButton");
+
+const shoutOutModal =
+  document.getElementById("shoutOutModal");
+
+const shoutOutName =
+  document.getElementById("shoutOutName");
+
+const shoutOutMessage =
+  document.getElementById("shoutOutMessage");
+
+const shoutOutError =
+  document.getElementById("shoutOutError");
+
+const shoutOutCount =
+  document.getElementById("shoutOutCount");
+
+const sendShoutOutBtn =
+  document.getElementById("sendShoutOutBtn");
+
+const cancelShoutOutBtn =
+  document.getElementById("cancelShoutOutBtn");
+
+const accessPinModal =
+  document.getElementById("accessPinModal");
+
+const accessPinTitle =
+  document.getElementById("accessPinTitle");
+
+const accessPinInput =
+  document.getElementById("accessPinInput");
+
+const accessPinError =
+  document.getElementById("accessPinError");
+
+const submitAccessPinBtn =
+  document.getElementById("submitAccessPinBtn");
+
+const cancelAccessPinBtn =
+  document.getElementById("cancelAccessPinBtn");
+
+let pendingProtectedArea = null;
+
 const dashboardButton =
   document.getElementById(
     "dashboardButton"
@@ -1659,22 +1915,410 @@ const barRushBtn =
   document.getElementById(
     "barRushBtn"
   );
+
+const importSetlistBtn = document.getElementById("importSetlistBtn");
+const setlistFileInput = document.getElementById("setlistFileInput");
+const showAddSongBtn = document.getElementById("showAddSongBtn");
+const removeSelectedSongsBtn = document.getElementById("removeSelectedSongsBtn");
+const removeAllSetlistBtn = document.getElementById("removeAllSetlistBtn");
+const addSingleSongForm = document.getElementById("addSingleSongForm");
+const newSongTitle = document.getElementById("newSongTitle");
+const newSongArtist = document.getElementById("newSongArtist");
+const newSongGenre = document.getElementById("newSongGenre");
+const saveSingleSongBtn = document.getElementById("saveSingleSongBtn");
+const setlistManagerStatus = document.getElementById("setlistManagerStatus");
+const setlistManagerList = document.getElementById("setlistManagerList");
+const setlistSongCount = document.getElementById("setlistSongCount");
+
+function cleanSetlistSong(song) {
+  const title = String(song?.title || song?.song || "").trim().slice(0, 120);
+  const artist = String(song?.artist || "").trim().slice(0, 120);
+  const genre = String(song?.genre || "Unknown").trim().slice(0, 80) || "Unknown";
+
+  return title ? { title, artist, genre } : null;
+}
+
+function deduplicateSetlist(songs) {
+  const seen = new Set();
+
+  return songs.map(cleanSetlistSong).filter((song) => {
+    if (!song) return false;
+    const key = `${song.title}|${song.artist}`.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+async function saveSetlist(songs, message) {
+  const cleanedSongs = deduplicateSetlist(songs);
+
+  if (!isSupabaseConfigured || !supabase) {
+    throw new Error("The live database is not connected.");
+  }
+
+  const { error } = await supabase
+    .from("songrush_sessions")
+    .update({ setlist: cleanedSongs })
+    .eq("session_id", appState.session.id);
+
+  if (error) throw error;
+
+  appState.session.setlist = cleanedSongs;
+  appState.songs = cleanedSongs;
+  renderSongs(songSearchInput.value);
+  renderSetlistManager();
+  setlistManagerStatus.textContent = message;
+}
+
+function renderSetlistManager() {
+  if (!setlistManagerList || !setlistSongCount) return;
+
+  setlistManagerList.innerHTML = "";
+  setlistSongCount.textContent = `${appState.songs.length} song${appState.songs.length === 1 ? "" : "s"}`;
+  removeAllSetlistBtn.disabled = appState.songs.length === 0;
+  removeSelectedSongsBtn.disabled = true;
+
+  if (appState.songs.length === 0) {
+    setlistManagerList.innerHTML = '<p class="empty-state">No songs in this setlist.</p>';
+    return;
+  }
+
+  appState.songs.forEach((song, index) => {
+    const row = document.createElement("label");
+    row.className = "setlist-manager-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.songIndex = String(index);
+    checkbox.addEventListener("change", () => {
+      removeSelectedSongsBtn.disabled =
+        setlistManagerList.querySelectorAll('input[type="checkbox"]:checked').length === 0;
+    });
+
+    const details = document.createElement("div");
+    details.className = "setlist-manager-song";
+    const title = document.createElement("strong");
+    title.textContent = song.title;
+    const meta = document.createElement("span");
+    meta.textContent = [song.artist, song.genre].filter(Boolean).join(" · ");
+    details.append(title, meta);
+    row.append(checkbox, details);
+    setlistManagerList.appendChild(row);
+  });
+}
+
+function parseSetlistCsv(text) {
+  return text.split(/\r?\n/).map((line) => {
+    const [title = "", artist = "", genre = "Unknown"] = line
+      .split(",")
+      .map((value) => value.trim().replace(/^"|"$/g, ""));
+    return { title, artist, genre };
+  });
+}
+
+importSetlistBtn?.addEventListener("click", () => setlistFileInput.click());
+
+setlistFileInput?.addEventListener("change", async () => {
+  const file = setlistFileInput.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const imported = file.name.toLowerCase().endsWith(".json")
+      ? JSON.parse(text)
+      : parseSetlistCsv(text);
+    const incomingSongs = Array.isArray(imported) ? imported : imported.songs;
+    if (!Array.isArray(incomingSongs)) throw new Error("Invalid setlist file.");
+    const merged = deduplicateSetlist([...appState.songs, ...incomingSongs]);
+    const addedCount = merged.length - appState.songs.length;
+    await saveSetlist(merged, `${addedCount} song${addedCount === 1 ? "" : "s"} added from ${file.name}.`);
+  } catch (error) {
+    console.error("Unable to import setlist", error);
+    setlistManagerStatus.textContent = "Could not read that file. Use a SongRush JSON or CSV file.";
+  } finally {
+    setlistFileInput.value = "";
+  }
+});
+
+showAddSongBtn?.addEventListener("click", () => {
+  addSingleSongForm.classList.toggle("hidden");
+  if (!addSingleSongForm.classList.contains("hidden")) newSongTitle.focus();
+});
+
+saveSingleSongBtn?.addEventListener("click", async () => {
+  const song = cleanSetlistSong({
+    title: newSongTitle.value,
+    artist: newSongArtist.value,
+    genre: newSongGenre.value,
+  });
+  if (!song) {
+    setlistManagerStatus.textContent = "Enter a song title first.";
+    return;
+  }
+
+  try {
+    await saveSetlist([...appState.songs, song], `${song.title} added.`);
+    newSongTitle.value = "";
+    newSongArtist.value = "";
+    newSongGenre.value = "";
+    addSingleSongForm.classList.add("hidden");
+  } catch (error) {
+    console.error("Unable to add song", error);
+    setlistManagerStatus.textContent = "The song could not be saved.";
+  }
+});
+
+removeSelectedSongsBtn?.addEventListener("click", async () => {
+  const selected = new Set(
+    [...setlistManagerList.querySelectorAll('input[type="checkbox"]:checked')]
+      .map((checkbox) => Number(checkbox.dataset.songIndex))
+  );
+  if (selected.size === 0) return;
+  if (!window.confirm(`Remove ${selected.size} selected song${selected.size === 1 ? "" : "s"}?`)) return;
+
+  try {
+    await saveSetlist(
+      appState.songs.filter((_, index) => !selected.has(index)),
+      `${selected.size} song${selected.size === 1 ? "" : "s"} removed.`
+    );
+  } catch (error) {
+    console.error("Unable to remove selected songs", error);
+    setlistManagerStatus.textContent = "The selected songs could not be removed.";
+  }
+});
+
+removeAllSetlistBtn?.addEventListener("click", async () => {
+  if (appState.songs.length === 0) return;
+  if (!window.confirm(`Remove all ${appState.songs.length} songs from tonight's setlist?`)) return;
+
+  try {
+    await saveSetlist([], "All setlist songs removed.");
+  } catch (error) {
+    console.error("Unable to remove setlist", error);
+    setlistManagerStatus.textContent = "The setlist could not be cleared.";
+  }
+});
 joinButton.addEventListener(
   "click",
   showSongList
 );
 
-if (tvDisplayButton) {
-  tvDisplayButton.addEventListener(
-    "click",
-    showTvDisplay
+andyHelpButtons.forEach((button) => {
+  button.addEventListener("click", openAndyTutorial);
+});
+
+andyBackBtn?.addEventListener("click", () => {
+  andyTutorialStep = Math.max(0, andyTutorialStep - 1);
+  renderAndyTutorialStep();
+});
+
+andyNextBtn?.addEventListener("click", () => {
+  if (andyTutorialStep < ANDY_TUTORIAL_STEPS.length - 1) {
+    andyTutorialStep += 1;
+    renderAndyTutorialStep();
+    return;
+  }
+
+  closeAndyTutorial();
+});
+
+skipAndyTutorial?.addEventListener("click", closeAndyTutorial);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !andyTutorial?.classList.contains("hidden")) {
+    closeAndyTutorial();
+  }
+});
+
+function closeShoutOutModal() {
+  shoutOutModal?.classList.add("hidden");
+  if (shoutOutError) shoutOutError.textContent = "";
+}
+
+shoutOutButton?.addEventListener("click", () => {
+  shoutOutModal?.classList.remove("hidden");
+  shoutOutMessage?.focus();
+});
+
+shoutBeerButton?.addEventListener("click", async () => {
+  const originalText = shoutBeerButton.textContent;
+  shoutBeerButton.disabled = true;
+  shoutBeerButton.textContent = "Opening Payment...";
+
+  try {
+    await startBeerShoutCheckout();
+  } catch (error) {
+    console.error("Beer shout checkout failed", error);
+    alert("Payment could not start. Please try again.");
+    shoutBeerButton.disabled = false;
+    shoutBeerButton.textContent = originalText;
+  }
+});
+
+cancelShoutOutBtn?.addEventListener(
+  "click",
+  closeShoutOutModal
+);
+
+shoutOutModal?.addEventListener("click", (event) => {
+  if (event.target === shoutOutModal) {
+    closeShoutOutModal();
+  }
+});
+
+shoutOutMessage?.addEventListener("input", () => {
+  const message = shoutOutMessage.value;
+  shoutOutCount.textContent = `${message.length} / 160`;
+  shoutOutError.textContent = containsOffensiveLanguage(message)
+    ? "Please rewrite this message without offensive language."
+    : "";
+});
+
+sendShoutOutBtn?.addEventListener("click", async () => {
+  const name = shoutOutName.value.trim();
+  const message = shoutOutMessage.value.trim();
+
+  if (!message) {
+    shoutOutError.textContent = "Please enter a shout-out.";
+    shoutOutMessage.focus();
+    return;
+  }
+
+  if (containsOffensiveLanguage(message)) {
+    shoutOutError.textContent =
+      "Please rewrite this message without offensive language.";
+    shoutOutMessage.focus();
+    return;
+  }
+
+  sendShoutOutBtn.disabled = true;
+  sendShoutOutBtn.textContent = "Opening Payment...";
+
+  try {
+    await startShoutOutCheckout(name, message);
+  } catch (error) {
+    console.error("Shout-out checkout failed", error);
+    shoutOutError.textContent =
+      "Payment could not start. Please try again.";
+    sendShoutOutBtn.disabled = false;
+    sendShoutOutBtn.textContent = "Check Message & Pay $10";
+  }
+});
+
+function hasProtectedAccess(area) {
+  try {
+    const unlockedAreas = JSON.parse(
+      sessionStorage.getItem(ACCESS_SESSION_KEY) || "[]"
+    );
+
+    return unlockedAreas.includes(area);
+  } catch {
+    return false;
+  }
+}
+
+function rememberProtectedAccess(area) {
+  let unlockedAreas = [];
+
+  try {
+    unlockedAreas = JSON.parse(
+      sessionStorage.getItem(ACCESS_SESSION_KEY) || "[]"
+    );
+  } catch {
+    unlockedAreas = [];
+  }
+
+  sessionStorage.setItem(
+    ACCESS_SESSION_KEY,
+    JSON.stringify([...new Set([...unlockedAreas, area])])
   );
 }
 
-dashboardButton.addEventListener(
+function openProtectedArea(area) {
+  if (area === "tv") {
+    showTvDisplay();
+  } else if (area === "dashboard") {
+    showDashboard();
+  }
+}
+
+function closeAccessPinModal() {
+  accessPinModal?.classList.add("hidden");
+  accessPinInput.value = "";
+  accessPinError.textContent = "";
+  pendingProtectedArea = null;
+}
+
+function requestProtectedAccess(area) {
+  if (hasProtectedAccess(area)) {
+    openProtectedArea(area);
+    return;
+  }
+
+  pendingProtectedArea = area;
+  accessPinTitle.textContent =
+    area === "tv" ? "TV Display Access" : "Performer Access";
+  accessPinModal.classList.remove("hidden");
+  accessPinInput.focus();
+}
+
+tvDisplayButton?.addEventListener("click", () => {
+  requestProtectedAccess("tv");
+});
+
+dashboardButton?.addEventListener("click", () => {
+  requestProtectedAccess("dashboard");
+});
+
+cancelAccessPinBtn?.addEventListener(
   "click",
-  showDashboard
+  closeAccessPinModal
 );
+
+accessPinModal?.addEventListener("click", (event) => {
+  if (event.target === accessPinModal) {
+    closeAccessPinModal();
+  }
+});
+
+accessPinInput?.addEventListener("input", () => {
+  accessPinInput.value = accessPinInput.value.replace(/\D/g, "");
+  accessPinError.textContent = "";
+});
+
+accessPinInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    submitAccessPinBtn.click();
+  }
+});
+
+submitAccessPinBtn?.addEventListener("click", async () => {
+  const area = pendingProtectedArea;
+  const pin = accessPinInput.value;
+
+  if (!area || !/^\d{4,6}$/.test(pin)) {
+    accessPinError.textContent = "Enter a valid 4–6 digit PIN.";
+    return;
+  }
+
+  submitAccessPinBtn.disabled = true;
+  submitAccessPinBtn.textContent = "Checking...";
+
+  try {
+    await validateAccessPin(pin, area);
+    rememberProtectedAccess(area);
+    closeAccessPinModal();
+    openProtectedArea(area);
+  } catch (error) {
+    accessPinError.textContent = error.message;
+    accessPinInput.value = "";
+    accessPinInput.focus();
+  } finally {
+    submitAccessPinBtn.disabled = false;
+    submitAccessPinBtn.textContent = "Unlock";
+  }
+});
 
 backToLandingBtn.addEventListener(
   "click",
@@ -1733,6 +2377,8 @@ document.addEventListener(
   (event) => {
     if (event.key === "Escape") {
       closeModal();
+      closeShoutOutModal();
+      closeAccessPinModal();
     }
   }
 );
@@ -2968,6 +3614,14 @@ if (finishCurrentSongBtn) {
 
 async function loadSongs() {
   try {
+    if (Array.isArray(appState.session.setlist)) {
+      appState.songs = appState.session.setlist;
+      await loadPlayedTonightFromSupabase();
+      renderSongs();
+      renderSetlistManager();
+      return;
+    }
+
     const response = await fetch(
       "songs.json"
     );
@@ -2984,6 +3638,7 @@ async function loadSongs() {
     await loadPlayedTonightFromSupabase();
 
     renderSongs();
+    renderSetlistManager();
   } catch (error) {
     console.error(
       "Unable to load songs",
@@ -3011,7 +3666,7 @@ async function loadActiveSessionFromSupabase() {
     await supabase
       .from("songrush_sessions")
       .select(
-        "session_id, allow_repeats, requests_open, updated_at"
+        "session_id, allow_repeats, requests_open, setlist, updated_at"
       )
       .order("updated_at", {
         ascending: false,
@@ -3053,6 +3708,10 @@ async function loadActiveSessionFromSupabase() {
   appState.session.requestsOpen =
     data.requests_open;
 
+  appState.session.setlist = Array.isArray(data.setlist)
+    ? data.setlist
+    : null;
+
   console.log(
     "Loaded active session:",
     appState.session.id
@@ -3065,6 +3724,16 @@ async function initialiseSongRush() {
     new URLSearchParams(
       window.location.search
     );
+
+  const paymentStatus =
+    urlParams.get("payment");
+
+  if (
+    paymentStatus !== "success" &&
+    !localStorage.getItem(ANDY_TUTORIAL_KEY)
+  ) {
+    window.setTimeout(openAndyTutorial, 450);
+  }
 
   const sessionFromQr =
     urlParams.get("session");
@@ -3085,10 +3754,21 @@ await loadRequestsFromSupabase();
 await loadNowPlayingFromSupabase();
 await loadSongs();
 
-  const paymentStatus =
-    urlParams.get("payment");
-
   if (paymentStatus === "success") {
+    const paymentType = urlParams.get("payment_type");
+
+    if (paymentType === "performer_beer") {
+      showLandingPage();
+      alert("🍺 Thank you! You shouted the performer a beer.");
+      return;
+    }
+
+    if (paymentType === "screen_message") {
+      showLandingPage();
+      alert("📣 Thank you! Your Crowd Shout-Out has been received.");
+      return;
+    }
+
     showLiveQueueScreen();
 
     subscribeToQueueChanges();

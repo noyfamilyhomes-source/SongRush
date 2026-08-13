@@ -18,6 +18,19 @@
             We Play.
         </h2>
 
+        <div class="bobble-andy-feature" aria-label="Meet Bobble Andy">
+            <div class="bobble-andy-crop" aria-hidden="true">
+                <img src="assets/bobble-andy.png" alt="">
+            </div>
+            <div class="bobble-andy-intro">
+                <span>YOUR LIVE-MUSIC GUIDE</span>
+                <strong>Meet Bobble Andy</strong>
+                <button class="andy-help-btn secondary-btn small-btn" type="button">
+                    Show me how it works
+                </button>
+            </div>
+        </div>
+
         <div
             class="session-summary"
             data-session-summary
@@ -30,6 +43,22 @@
                 type="button"
             >
                 Join Tonight's Show
+            </button>
+
+            <button
+                id="shoutOutButton"
+                class="secondary-btn audience-secondary-btn"
+                type="button"
+            >
+                📣 Send a Crowd Shout-Out — $10
+            </button>
+
+            <button
+                id="shoutBeerButton"
+                class="secondary-btn audience-secondary-btn beer-btn"
+                type="button"
+            >
+                🍺 Shout the Performer a Beer — $10
             </button>
 
             <p>No app required.</p>
@@ -59,12 +88,117 @@
     </div>
 
     <div
+        id="shoutOutModal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shoutOutModalTitle"
+    >
+        <div class="modal-content shout-out-modal-content">
+            <h2 id="shoutOutModalTitle">📣 Crowd Shout-Out</h2>
+
+            <p class="shout-out-help">
+                Send a message to the performer and crowd for $10.
+                Offensive messages are automatically blocked.
+            </p>
+
+            <label for="shoutOutName">Your name (optional)</label>
+            <input
+                id="shoutOutName"
+                type="text"
+                maxlength="60"
+                autocomplete="name"
+                placeholder="Your name"
+            >
+
+            <label for="shoutOutMessage">Your shout-out</label>
+            <textarea
+                id="shoutOutMessage"
+                maxlength="160"
+                rows="4"
+                placeholder="Happy birthday Sarah!"
+            ></textarea>
+
+            <div class="shout-out-meta">
+                <span id="shoutOutError" role="alert"></span>
+                <span id="shoutOutCount">0 / 160</span>
+            </div>
+
+            <button id="sendShoutOutBtn" type="button">
+                Check Message &amp; Pay $10
+            </button>
+
+            <button
+                id="cancelShoutOutBtn"
+                class="secondary-btn"
+                type="button"
+            >
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <div
+        id="accessPinModal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="accessPinTitle"
+    >
+        <div class="modal-content access-pin-content">
+            <h2 id="accessPinTitle">Performer Access</h2>
+
+            <p id="accessPinHelp">
+                Enter the access PIN to continue.
+            </p>
+
+            <label for="accessPinInput">Access PIN</label>
+            <input
+                id="accessPinInput"
+                type="password"
+                inputmode="numeric"
+                autocomplete="off"
+                maxlength="6"
+                pattern="[0-9]*"
+                placeholder="4–6 digit PIN"
+            >
+
+            <p id="accessPinError" class="access-pin-error" role="alert"></p>
+
+            <button id="submitAccessPinBtn" type="button">
+                Unlock
+            </button>
+
+            <button
+                id="cancelAccessPinBtn"
+                class="secondary-btn"
+                type="button"
+            >
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <div
         class="song-search-page"
         id="songSearchPage"
         hidden
     >
         <div class="song-search-card">
             <h1>🎸 SongRush</h1>
+
+            <div class="bobble-andy-customer">
+                <div class="bobble-andy-crop mini" aria-hidden="true">
+                    <img src="assets/bobble-andy.png" alt="">
+                </div>
+                <div>
+                    <strong>Bobble Andy</strong>
+                    <span>Pick a song and I'll help you send it to the performer.</span>
+                </div>
+                <button class="andy-help-btn secondary-btn small-btn" type="button" aria-label="Open Bobble Andy tutorial">
+                    Help
+                </button>
+            </div>
 
             <div class="song-search-header">
                 <h2>Request a Song</h2>
@@ -150,6 +284,39 @@
             >
                 Cancel
             </button>
+        </div>
+    </div>
+
+    <div
+        id="andyTutorial"
+        class="andy-tutorial hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="andyTutorialTitle"
+    >
+        <div class="andy-tutorial-stage">
+            <div class="bobble-andy-crop tutorial-andy" aria-hidden="true">
+                <img src="assets/bobble-andy.png" alt="">
+            </div>
+
+            <div class="andy-speech-bubble">
+                <button id="skipAndyTutorial" class="andy-skip" type="button">
+                    Skip
+                </button>
+                <p class="andy-step-count" id="andyStepCount">1 of 4</p>
+                <h2 id="andyTutorialTitle">G'day, I'm Bobble Andy!</h2>
+                <p id="andyTutorialText">
+                    I’ll show you how to request songs and join the fun tonight.
+                </p>
+                <div class="andy-tutorial-actions">
+                    <button id="andyBackBtn" class="secondary-btn small-btn" type="button">
+                        Back
+                    </button>
+                    <button id="andyNextBtn" class="small-btn" type="button">
+                        Next
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -492,6 +659,54 @@
             >
                 🍻 BAR RUSH
             </button>
+
+            <section class="setlist-manager">
+                <div class="setlist-manager-header">
+                    <div>
+                        <p class="section-label">SETLIST</p>
+                        <h3>Manage Songs</h3>
+                    </div>
+
+                    <span id="setlistSongCount" class="status-pill">
+                        0 songs
+                    </span>
+                </div>
+
+                <div class="setlist-actions">
+                    <button id="importSetlistBtn" class="secondary-btn" type="button">
+                        Add Setlist File
+                    </button>
+                    <input
+                        id="setlistFileInput"
+                        class="hidden"
+                        type="file"
+                        accept=".json,.csv,text/csv,application/json"
+                    >
+
+                    <button id="showAddSongBtn" class="secondary-btn" type="button">
+                        Add Single Song
+                    </button>
+
+                    <button id="removeSelectedSongsBtn" class="secondary-btn danger-btn" type="button" disabled>
+                        Remove Selected Songs
+                    </button>
+
+                    <button id="removeAllSetlistBtn" class="danger-btn" type="button">
+                        Remove All Setlist Songs
+                    </button>
+                </div>
+
+                <div id="addSingleSongForm" class="add-song-form hidden">
+                    <input id="newSongTitle" type="text" maxlength="120" placeholder="Song title">
+                    <input id="newSongArtist" type="text" maxlength="120" placeholder="Artist">
+                    <input id="newSongGenre" type="text" maxlength="80" placeholder="Genre (optional)">
+                    <button id="saveSingleSongBtn" type="button">Add Song</button>
+                </div>
+
+                <p id="setlistManagerStatus" class="setlist-manager-status" role="status"></p>
+
+                <div id="setlistManagerList" class="setlist-manager-list"></div>
+            </section>
 
             <section class="now-playing-card">
                 <div>

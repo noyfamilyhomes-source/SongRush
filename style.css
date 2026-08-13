@@ -28,6 +28,191 @@ body {
     padding: 30px;
 }
 
+.bobble-andy-feature,
+.bobble-andy-customer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    border: 1px solid rgba(157, 92, 255, 0.34);
+    background: linear-gradient(135deg, rgba(157, 92, 255, 0.14), rgba(255, 255, 255, 0.04));
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.bobble-andy-feature {
+    max-width: 520px;
+    margin: 22px auto 8px;
+    padding: 0 16px 0 0;
+}
+
+.bobble-andy-crop {
+    position: relative;
+    flex: 0 0 156px;
+    width: 156px;
+    height: 190px;
+    overflow: hidden;
+    background: #070708;
+}
+
+.bobble-andy-crop img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 421px;
+    max-width: none;
+    height: auto;
+}
+
+.bobble-andy-intro {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bobble-andy-intro span,
+.bobble-andy-customer span {
+    color: #c8a7ff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.bobble-andy-intro strong {
+    font-size: 1.35rem;
+}
+
+.bobble-andy-intro button {
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
+.bobble-andy-customer {
+    margin: 0 0 18px;
+    padding-right: 12px;
+}
+
+.bobble-andy-customer .mini {
+    flex-basis: 72px;
+    width: 72px;
+    height: 88px;
+}
+
+.bobble-andy-customer .mini img {
+    width: 195px;
+}
+
+.bobble-andy-customer > div:nth-child(2) {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.andy-tutorial {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 22px;
+    box-sizing: border-box;
+    background: rgba(3, 2, 8, 0.86);
+    backdrop-filter: blur(8px);
+}
+
+.andy-tutorial-stage {
+    width: min(760px, 100%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0;
+}
+
+.tutorial-andy {
+    flex-basis: 230px;
+    width: 230px;
+    height: 360px;
+    border-radius: 24px 0 0 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.tutorial-andy img {
+    width: 614px;
+}
+
+.andy-speech-bubble {
+    position: relative;
+    width: min(470px, 100%);
+    min-height: 230px;
+    padding: 30px;
+    box-sizing: border-box;
+    border: 2px solid #9d5cff;
+    border-radius: 26px 26px 26px 6px;
+    background: #ffffff;
+    color: #17121f;
+    text-align: left;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+.andy-speech-bubble::before {
+    content: "";
+    position: absolute;
+    left: -24px;
+    bottom: 28px;
+    border-width: 15px 24px 15px 0;
+    border-style: solid;
+    border-color: transparent #9d5cff transparent transparent;
+}
+
+.andy-speech-bubble h2 {
+    margin: 8px 42px 10px 0;
+    color: #7135ca;
+}
+
+.andy-speech-bubble p {
+    margin: 0 0 18px;
+    color: #30283b;
+    opacity: 1;
+    line-height: 1.55;
+}
+
+.andy-step-count {
+    color: #7a6e86 !important;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.andy-skip {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 8px 11px;
+    background: transparent;
+    color: #5d5268;
+    font-size: 0.9rem;
+}
+
+.andy-tutorial-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.andy-tutorial-actions .secondary-btn {
+    color: #332a3c;
+    background: #ece8f1;
+}
+
+body.tutorial-open {
+    overflow: hidden;
+}
+
 .song-search-card,
 .live-queue-card {
     background: rgba(12, 12, 16, 0.92);
@@ -132,6 +317,109 @@ button:disabled {
     width: 100%;
     min-height: 58px;
     font-size: 20px;
+    font-weight: 700;
+}
+
+.audience-entry .audience-secondary-btn {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.audience-entry .beer-btn {
+    border: 1px solid rgba(255, 204, 102, 0.42);
+    background: linear-gradient(
+        135deg,
+        rgba(255, 180, 70, 0.22),
+        rgba(255, 255, 255, 0.07)
+    );
+}
+
+.audience-entry .beer-btn:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 180, 70, 0.34),
+        rgba(255, 255, 255, 0.12)
+    );
+}
+
+.shout-out-modal-content {
+    text-align: left;
+}
+
+.shout-out-modal-content label {
+    display: block;
+    margin: 12px 0 7px;
+    font-weight: 700;
+}
+
+.shout-out-modal-content textarea {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    background: #1b1b1b;
+    color: white;
+    font: inherit;
+}
+
+.shout-out-help {
+    margin: 0 0 16px;
+}
+
+.shout-out-meta {
+    min-height: 22px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 7px 0 14px;
+    font-size: 14px;
+}
+
+#shoutOutError {
+    color: #ff9b9b;
+    font-weight: 700;
+}
+
+#shoutOutCount {
+    margin-left: auto;
+    white-space: nowrap;
+    opacity: 0.75;
+}
+
+.shout-out-modal-content button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.access-pin-content {
+    max-width: 380px;
+    text-align: left;
+}
+
+.access-pin-content label {
+    display: block;
+    margin: 12px 0 7px;
+    font-weight: 700;
+}
+
+.access-pin-content input {
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 0.35em;
+}
+
+.access-pin-content button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.access-pin-error {
+    min-height: 22px;
+    margin: 0;
+    color: #ff9b9b;
+    font-size: 14px;
     font-weight: 700;
 }
 
@@ -556,6 +844,106 @@ input {
     margin-bottom: 16px;
 }
 
+.setlist-manager {
+    margin: 20px 0;
+    padding: 18px;
+    border: 1px solid rgba(157, 92, 255, 0.25);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.setlist-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.setlist-manager-header h3,
+.setlist-manager-header .section-label {
+    margin: 0;
+}
+
+.setlist-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.setlist-actions button {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 14px;
+}
+
+.danger-btn {
+    background: rgba(179, 63, 63, 0.86);
+    color: white;
+}
+
+.danger-btn:hover {
+    background: #c84b4b;
+}
+
+.add-song-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.add-song-form input {
+    margin: 0;
+}
+
+.setlist-manager-status {
+    min-height: 20px;
+    margin: 12px 0 0;
+    color: #b7ffd4;
+    font-size: 14px;
+}
+
+.setlist-manager-list {
+    max-height: 330px;
+    margin-top: 10px;
+    overflow-y: auto;
+}
+
+.setlist-manager-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.setlist-manager-item input {
+    width: auto;
+    margin: 3px 0 0;
+}
+
+.setlist-manager-song {
+    min-width: 0;
+}
+
+.setlist-manager-song strong,
+.setlist-manager-song span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.setlist-manager-song span {
+    margin-top: 2px;
+    opacity: 0.72;
+    font-size: 13px;
+}
+
+@media (max-width: 520px) {
+    .setlist-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
 .dashboard-session-header {
     display: flex;
     justify-content: space-between;
@@ -695,6 +1083,65 @@ input {
         line-height: 1.25;
         text-align: center;
     }
+
+    .bobble-andy-feature {
+        gap: 10px;
+    }
+
+    .bobble-andy-feature .bobble-andy-crop {
+        flex-basis: 110px;
+        width: 110px;
+        height: 155px;
+    }
+
+    .bobble-andy-feature .bobble-andy-crop img {
+        width: 343px;
+    }
+
+    .bobble-andy-intro strong {
+        font-size: 1.1rem;
+    }
+
+    .bobble-andy-intro button {
+        padding: 10px 12px;
+        font-size: 0.88rem;
+    }
+
+    .andy-tutorial {
+        padding: 12px;
+    }
+
+    .andy-tutorial-stage {
+        position: relative;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .tutorial-andy {
+        flex-basis: auto;
+        width: 128px;
+        height: 155px;
+        margin: 0 0 -12px -52%;
+        border-radius: 18px 18px 0 0;
+    }
+
+    .tutorial-andy img {
+        width: 343px;
+    }
+
+    .andy-speech-bubble {
+        min-height: 250px;
+        padding: 24px 20px 20px;
+        border-radius: 22px;
+    }
+
+    .andy-speech-bubble::before {
+        left: 68px;
+        top: -22px;
+        bottom: auto;
+        transform: rotate(90deg);
+    }
+}
 }
 .now-playing-card {
   background: #1f1f26;
