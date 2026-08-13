@@ -3235,7 +3235,7 @@ function renderTvQrCode() {
   const qrImageUrl =
     `/.netlify/functions/generate-qr?session=${encodeURIComponent(
       sessionId
-    )}`;
+    )}&v=3`;
 
   tvQrCode.innerHTML = "";
 
