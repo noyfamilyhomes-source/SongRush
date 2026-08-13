@@ -283,7 +283,7 @@ let screenMessageSubscription = null;
 let screenMessageTimer = null;
 let barRushSubscription = null;
 let barRushPhaseTimer = null;
-const SCREEN_MESSAGE_DISPLAY_MS = 30_000;
+const SCREEN_MESSAGE_DISPLAY_MS = 60_000;
 const BAR_RUSH_FULLSCREEN_MS = 30_000;
 
 const appState = {
@@ -1162,6 +1162,10 @@ function showDashboard() {
 
   subscribeToQueueChanges();
   subscribeToSessionSettingsChanges();
+
+  if (urlParams.get("view") === "customer") {
+    showSongList();
+  }
 }
 
 function showRequestModal(song) {
@@ -3264,6 +3268,25 @@ function renderTvQrCode() {
 
 function renderTvDisplay() {  
   renderTvQrCode();
+
+  const playingNextTitle =
+    document.getElementById("tvPlayingNextTitle");
+
+  const playingNextArtist =
+    document.getElementById("tvPlayingNextArtist");
+
+  const nextSong = appState.liveQueue.upNext?.[0];
+
+  if (playingNextTitle) {
+    playingNextTitle.textContent =
+      nextSong?.title || "No song queued";
+  }
+
+  if (playingNextArtist) {
+    playingNextArtist.textContent =
+      nextSong?.artist || "";
+  }
+
   if (
     !tvNowPlayingTitle ||
     !tvNowPlayingArtist ||
@@ -4058,10 +4081,3 @@ await loadSongs();
 }
 
 initialiseSongRush();
-
-
-if (new URLSearchParams(window.location.search).get("view") === "customer") {
-  window.addEventListener("load", () => {
-    window.setTimeout(showSongList, 700);
-  });
-}

@@ -1602,7 +1602,50 @@ button:disabled:hover {
     }
 }
 
-/* ---------- 30-second Crowd Shout-Out ---------- */
+/* ---------- Always-visible Playing Next ---------- */
+
+.tv-playing-next {
+    position: fixed;
+    left: 28px;
+    bottom: 28px;
+    z-index: 950;
+    display: grid;
+    max-width: min(520px, calc(100vw - 56px));
+    padding: 14px 20px;
+    border: 1px solid rgba(180, 128, 255, 0.55);
+    border-radius: 16px;
+    background: rgba(13, 9, 22, 0.94);
+    box-shadow: 0 12px 38px rgba(0, 0, 0, 0.55);
+    text-align: left;
+}
+
+.tv-playing-next-label {
+    color: #c9a8ff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+}
+
+.tv-playing-next strong {
+    margin-top: 4px;
+    font-size: clamp(1.05rem, 2vw, 1.45rem);
+}
+
+#tvPlayingNextArtist {
+    margin-top: 2px;
+    opacity: 0.76;
+}
+
+@media (max-width: 700px) {
+    .tv-playing-next {
+        left: 12px;
+        bottom: 12px;
+        max-width: calc(100vw - 24px);
+        padding: 11px 14px;
+    }
+}
+
+/* ---------- One-minute Crowd Shout-Out ---------- */
 
 .tv-shout-out-panel {
     min-height: 75vh;
@@ -1675,13 +1718,3 @@ button:disabled:hover {
         letter-spacing: 0.2em;
     }
 }
-
-
-/* Always-visible Playing Next */
-.tv-playing-next {
- position: fixed; left: 28px; bottom: 28px; z-index: 950; display: grid; max-width: min(520px, calc(100vw - 56px)); padding: 14px 20px; border: 1px solid rgba(180, 128, 255, 0.55); border-radius: 16px; background: rgba(13, 9, 22, 0.94); box-shadow: 0 12px 38px rgba(0, 0, 0, 0.55); text-align: left;
-}
-.tv-playing-next-label { color: #c9a8ff; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.2em; }
-.tv-playing-next strong { margin-top: 4px; font-size: clamp(1.05rem, 2vw, 1.45rem); }
-#tvPlayingNextArtist { margin-top: 2px; opacity: 0.76; }
-@media (max-width: 700px) { .tv-playing-next { left: 12px; bottom: 12px; max-width: calc(100vw - 24px); padding: 11px 14px; } }
