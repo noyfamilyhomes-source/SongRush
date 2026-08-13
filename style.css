@@ -1289,6 +1289,18 @@ button:disabled:hover {
     text-align: center;
 }
 
+.tv-venue-welcome {
+    width: min(100%, 980px);
+    margin: 6px auto 20px;
+    color: #ffffff;
+    font-size: clamp(2rem, 4.2vw, 4.5rem);
+    line-height: 1.05;
+    text-align: center;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    text-shadow: 0 0 28px rgba(157, 92, 255, 0.58);
+}
+
 .tv-brand-hero {
     position: relative;
     width: min(100%, 820px);

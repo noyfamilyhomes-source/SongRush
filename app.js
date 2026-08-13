@@ -1100,6 +1100,10 @@ async function loadSessionSettingsFromSupabase() {
   ) {
     renderSongs(songSearchInput.value);
   }
+
+  if (appState.currentView === "tvDisplay") {
+    renderTvDisplay();
+  }
 }
 
 function renderSessionUi() {
@@ -3376,6 +3380,15 @@ function renderTvQrCode() {
 
 function renderTvDisplay() {  
   renderTvQrCode();
+
+  const venueWelcome =
+    document.getElementById("tvVenueWelcome");
+
+  if (venueWelcome) {
+    venueWelcome.textContent = `Welcome to ${
+      appState.session.venueName || "Tonight's Venue"
+    }`;
+  }
 
   const playingNextTitle =
     document.getElementById("tvPlayingNextTitle");
