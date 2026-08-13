@@ -4025,6 +4025,7 @@ async function initialiseSongRush() {
 
   if (
     paymentStatus !== "success" &&
+    urlParams.get("view") !== "performer" &&
     !localStorage.getItem(ANDY_TUTORIAL_KEY)
   ) {
     window.setTimeout(openAndyTutorial, 450);
@@ -4088,5 +4089,17 @@ if (
 ) {
   window.addEventListener("load", () => {
     window.setTimeout(showSongList, 700);
+  });
+}
+
+if (
+  new URLSearchParams(window.location.search).get("view") ===
+  "performer"
+) {
+  window.addEventListener("load", () => {
+    window.setTimeout(
+      () => requestProtectedAccess("dashboard"),
+      700
+    );
   });
 }
