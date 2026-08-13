@@ -1,9 +1,37 @@
 import Stripe from "stripe";
+import paymentSecurity from "./payment-security.cjs";
 
-const siteUrl = "https://getsongrush.netlify.app";
+const { expectedAmountFor, isSafeIdentifier } = paymentSecurity;
+
+const siteUrl = String(
+  process.env.URL || "https://crowdrush.com.au"
+).replace(/\/$/, "");
 
 const stripeSecretKey =
   process.env.STRIPE_SECRET_KEY;
+
+const OFFENSIVE_WORDS = [
+  "fuck", "shit", "cunt", "bitch", "dick", "cock",
+  "nigger", "faggot", "slut", "whore", "rape", "pedo",
+];
+
+const containsOffensiveLanguage = (value) => {
+  const normalised = String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[0@]/g, "o")
+    .replace(/[1!|]/g, "i")
+    .replace(/[3]/g, "e")
+    .replace(/[4]/g, "a")
+    .replace(/[5$]/g, "s")
+    .replace(/[7+]/g, "t");
+  const compact = normalised.replace(/[^a-z]/g, "");
+
+  return OFFENSIVE_WORDS.some((word) =>
+    new RegExp(`(^|[^a-z])${word}([^a-z]|$)`, "i").test(normalised) ||
+    compact.includes(word)
+  );
+};
 
 export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -60,8 +88,8 @@ export const handler = async (event) => {
   if (
     !Number.isInteger(amountCents) ||
     amountCents <= 0 ||
-    !sessionId ||
-    !requestToken
+    !isSafeIdentifier(sessionId) ||
+    !isSafeIdentifier(requestToken)
   ) {
     return {
       statusCode: 400,
@@ -77,6 +105,15 @@ export const handler = async (event) => {
   let metadata;
 
   if (paymentType === "screen_message") {
+    if (amountCents !== expectedAmountFor(paymentType)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: "Invalid shout-out price.",
+        }),
+      };
+    }
+
     const customerName =
       String(
         payload.customerName || ""
@@ -101,6 +138,16 @@ export const handler = async (event) => {
       };
     }
 
+    if (containsOffensiveLanguage(screenMessage)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error:
+            "Please rewrite this message without offensive language.",
+        }),
+      };
+    }
+
     productName =
       "SongRush Crowd Shout-Out";
 
@@ -113,6 +160,29 @@ export const handler = async (event) => {
       sessionId,
       customerName,
       screenMessage,
+      requestToken,
+    };
+  } else if (paymentType === "performer_beer") {
+    if (amountCents !== expectedAmountFor(paymentType)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: "Invalid beer shout price.",
+        }),
+      };
+    }
+
+    const performerName = String(
+      payload.performerName || "Performer"
+    ).trim().slice(0, 80);
+
+    productName = "Shout the Performer a Beer";
+    productDescription = `A beer for ${performerName || "the performer"}`;
+
+    metadata = {
+      paymentType: "performer_beer",
+      sessionId,
+      performerName,
       requestToken,
     };
   } else if (
@@ -133,6 +203,11 @@ export const handler = async (event) => {
         payload.requestType || ""
       ).trim();
 
+    const expectedAmount = expectedAmountFor(
+      paymentType,
+      requestType
+    );
+
     const requesterName =
       String(
         payload.requesterName || ""
@@ -140,13 +215,14 @@ export const handler = async (event) => {
 
     if (
       !songTitle ||
-      !requestType
+      !requestType ||
+      amountCents !== expectedAmount
     ) {
       return {
         statusCode: 400,
         body: JSON.stringify({
           error:
-            "Missing required song request fields.",
+            "Missing or invalid song request fields.",
         }),
       };
     }
@@ -229,6 +305,11 @@ export const handler = async (event) => {
             )}`,
 
           metadata,
+          client_reference_id: requestToken,
+        }
+        ,
+        {
+          idempotencyKey: requestToken,
         }
       );
 
@@ -249,7 +330,7 @@ export const handler = async (event) => {
       statusCode: 500,
       body: JSON.stringify({
         error:
-          error.message,
+          "Unable to start payment. Please try again.",
       }),
     };
   }

@@ -1,5 +1,8 @@
 const Stripe = require("stripe");
 const { createClient } = require("@supabase/supabase-js");
+const {
+  isVerifiedPaidCheckout,
+} = require("./payment-security.cjs");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -59,6 +62,21 @@ exports.handler = async (event) => {
 
   const paymentType =
     metadata.paymentType || "song_request";
+
+  if (!isVerifiedPaidCheckout(checkoutSession, metadata)) {
+    console.error("Rejected unverified checkout session", {
+      id: checkoutSession.id,
+      paymentStatus: checkoutSession.payment_status,
+      currency: checkoutSession.currency,
+      amountTotal: checkoutSession.amount_total,
+      paymentType,
+    });
+
+    return {
+      statusCode: 400,
+      body: "Payment verification failed",
+    };
+  }
 
   const amount =
     typeof checkoutSession.amount_total === "number"
@@ -120,6 +138,48 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       body: "Paid screen message inserted",
+    };
+  }
+
+  if (paymentType === "performer_beer") {
+    if (!metadata.sessionId || !metadata.requestToken) {
+      console.error("Missing required beer shout metadata:", metadata);
+      return {
+        statusCode: 400,
+        body: "Missing required beer shout metadata",
+      };
+    }
+
+    const { error } = await supabase
+      .from("performer_tips")
+      .insert({
+        session_id: metadata.sessionId,
+        performer_name: metadata.performerName || "",
+        tip_type: "beer",
+        amount,
+        status: "paid",
+        request_token: metadata.requestToken,
+      });
+
+    if (error?.code === "23505") {
+      console.log("Duplicate beer shout webhook ignored:", metadata.requestToken);
+      return {
+        statusCode: 200,
+        body: "Beer shout already recorded",
+      };
+    }
+
+    if (error) {
+      console.error("Beer shout insert failed:", error);
+      return {
+        statusCode: 500,
+        body: "Beer shout insert failed",
+      };
+    }
+
+    return {
+      statusCode: 200,
+      body: "Paid beer shout recorded",
     };
   }
 
