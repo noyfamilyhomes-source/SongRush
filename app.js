@@ -462,6 +462,10 @@ function renderDashboardSession() {
   dashboardVenue.textContent =
     appState.session.venueName;
 
+  if (venueNameInput && document.activeElement !== venueNameInput) {
+    venueNameInput.value = appState.session.venueName || "";
+  }
+
   dashboardStartTime.textContent =
     appState.session.startTime;
 
@@ -1041,7 +1045,7 @@ async function loadSessionSettingsFromSupabase() {
   const { data, error } = await supabase
     .from("songrush_sessions")
     .select(
-      "allow_repeats, requests_open, setlist"
+      "allow_repeats, requests_open, setlist, venue_name"
     )
     .eq(
       "session_id",
@@ -1078,6 +1082,10 @@ async function loadSessionSettingsFromSupabase() {
 
   appState.session.requestsOpen =
     data.requests_open;
+
+  if (typeof data.venue_name === "string") {
+    appState.session.venueName = data.venue_name;
+  }
 
   if (Array.isArray(data.setlist)) {
     appState.session.setlist = data.setlist;
@@ -2112,6 +2120,11 @@ const dashboardVenue =
     "dashboardVenue"
   );
 
+const venueNameForm = document.getElementById("venueNameForm");
+const venueNameInput = document.getElementById("venueNameInput");
+const saveVenueNameBtn = document.getElementById("saveVenueNameBtn");
+const venueNameStatus = document.getElementById("venueNameStatus");
+
 const dashboardStartTime =
   document.getElementById(
     "dashboardStartTime"
@@ -2160,6 +2173,41 @@ const saveSingleSongBtn = document.getElementById("saveSingleSongBtn");
 const setlistManagerStatus = document.getElementById("setlistManagerStatus");
 const setlistManagerList = document.getElementById("setlistManagerList");
 const setlistSongCount = document.getElementById("setlistSongCount");
+
+venueNameForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const venueName = venueNameInput.value.trim();
+
+  if (!venueName) {
+    venueNameStatus.textContent = "Enter a venue name.";
+    venueNameInput.focus();
+    return;
+  }
+
+  saveVenueNameBtn.disabled = true;
+  saveVenueNameBtn.textContent = "Saving...";
+  venueNameStatus.textContent = "";
+
+  const { data, error } = await supabase
+    .from("songrush_sessions")
+    .update({ venue_name: venueName, updated_at: new Date().toISOString() })
+    .eq("session_id", appState.session.id)
+    .select("session_id, venue_name")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("Unable to save venue name", error);
+    venueNameStatus.textContent = "Venue name could not be saved.";
+  } else {
+    appState.session.venueName = data.venue_name;
+    venueNameStatus.textContent = "Venue name saved.";
+    renderSessionUi();
+    renderTvDisplay();
+  }
+
+  saveVenueNameBtn.disabled = false;
+  saveVenueNameBtn.textContent = "Save";
+});
 
 function cleanSetlistSong(song) {
   const title = String(song?.title || song?.song || "").trim().slice(0, 120);

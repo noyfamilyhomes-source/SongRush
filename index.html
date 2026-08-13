@@ -670,6 +670,15 @@
                     </div>
                 </div>
 
+                <form id="venueNameForm" class="venue-name-form">
+                    <label for="venueNameInput">Venue Name</label>
+                    <div>
+                        <input id="venueNameInput" type="text" maxlength="100" placeholder="Enter venue name" autocomplete="organization">
+                        <button id="saveVenueNameBtn" type="submit">Save</button>
+                    </div>
+                    <p id="venueNameStatus" role="status"></p>
+                </form>
+
                 <button
                     id="startNewSessionBtn"
                     class="secondary-btn"

@@ -841,6 +841,14 @@ input {
     margin-bottom: 16px;
 }
 
+.venue-name-form { margin: 14px 0; }
+.venue-name-form label { display: block; margin-bottom: 7px; font-weight: 700; }
+.venue-name-form > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.venue-name-form input, .venue-name-form button { margin: 0; }
+.venue-name-form button { width: auto; }
+#venueNameStatus { min-height: 20px; margin: 6px 0 0; color: #b7ffd4; font-size: 0.85rem; }
+
+
 .setlist-manager {
     margin: 20px 0;
     padding: 18px;
