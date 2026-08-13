@@ -6,7 +6,7 @@ const ACCESS_SESSION_KEY = "songrushProtectedAccess";
 const ANDY_TUTORIAL_KEY = "songrushAndyTutorialSeen";
 const ANDY_TUTORIAL_STEPS = [
   {
-    title: "G'day, I'm Bobble Andy!",
+    title: "G'day, I'm Andy!",
     text: "I’ll show you how to request songs and join the fun tonight.",
   },
   {
