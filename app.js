@@ -485,6 +485,10 @@ function renderDashboardSession() {
     venueNameInput.value = appState.session.venueName || "";
   }
 
+  if (performerNameInput && document.activeElement !== performerNameInput) {
+    performerNameInput.value = appState.session.performerName || "";
+  }
+
   dashboardStartTime.textContent =
     appState.session.startTime;
 
@@ -1064,7 +1068,7 @@ async function loadSessionSettingsFromSupabase() {
   const { data, error } = await supabase
     .from("songrush_sessions")
     .select(
-      "allow_repeats, requests_open, setlist, venue_name"
+      "allow_repeats, requests_open, setlist, venue_name, performer_name"
     )
     .eq(
       "session_id",
@@ -1104,6 +1108,11 @@ async function loadSessionSettingsFromSupabase() {
 
   if (typeof data.venue_name === "string") {
     appState.session.venueName = data.venue_name;
+  }
+
+  if (typeof data.performer_name === "string" && data.performer_name.trim()) {
+    appState.session.performerName = data.performer_name;
+    appState.session.showName = `${data.performer_name} Live`;
   }
 
   if (Array.isArray(data.setlist)) {
@@ -2147,6 +2156,10 @@ const venueNameForm = document.getElementById("venueNameForm");
 const venueNameInput = document.getElementById("venueNameInput");
 const saveVenueNameBtn = document.getElementById("saveVenueNameBtn");
 const venueNameStatus = document.getElementById("venueNameStatus");
+const performerNameForm = document.getElementById("performerNameForm");
+const performerNameInput = document.getElementById("performerNameInput");
+const savePerformerNameBtn = document.getElementById("savePerformerNameBtn");
+const performerNameStatus = document.getElementById("performerNameStatus");
 
 const dashboardStartTime =
   document.getElementById(
@@ -2233,6 +2246,38 @@ venueNameForm?.addEventListener("submit", async (event) => {
 
   saveVenueNameBtn.disabled = false;
   saveVenueNameBtn.textContent = "Save";
+});
+
+performerNameForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const performerName = performerNameInput.value.trim();
+
+  if (!performerName) {
+    performerNameStatus.textContent = "Enter a performer name.";
+    performerNameInput.focus();
+    return;
+  }
+
+  savePerformerNameBtn.disabled = true;
+  savePerformerNameBtn.textContent = "Saving...";
+  performerNameStatus.textContent = "";
+
+  try {
+    const data = await runPerformerAction("update_session", {
+      changes: { performer_name: performerName },
+    });
+    appState.session.performerName = data.performer_name;
+    appState.session.showName = `${data.performer_name} Live`;
+    performerNameStatus.textContent = "Performer name saved.";
+    renderSessionUi();
+    renderTvDisplay();
+  } catch (error) {
+    console.error("Unable to save performer name", error);
+    performerNameStatus.textContent = "Performer name could not be saved.";
+  }
+
+  savePerformerNameBtn.disabled = false;
+  savePerformerNameBtn.textContent = "Save";
 });
 
 function cleanSetlistSong(song) {
@@ -3994,7 +4039,7 @@ async function loadActiveSessionFromSupabase() {
     await supabase
       .from("songrush_sessions")
       .select(
-        "session_id, allow_repeats, requests_open, setlist, updated_at"
+        "session_id, allow_repeats, requests_open, setlist, performer_name, venue_name, updated_at"
       )
       .order("updated_at", {
         ascending: false,
@@ -4041,6 +4086,15 @@ async function loadActiveSessionFromSupabase() {
   appState.session.setlist = Array.isArray(data.setlist)
     ? data.setlist
     : null;
+
+  if (typeof data.performer_name === "string" && data.performer_name.trim()) {
+    appState.session.performerName = data.performer_name;
+    appState.session.showName = `${data.performer_name} Live`;
+  }
+
+  if (typeof data.venue_name === "string") {
+    appState.session.venueName = data.venue_name;
+  }
 
   console.log(
     "Loaded active session:",
