@@ -32,7 +32,7 @@ export const handler = async (event) => {
   let result;
 
   if (body.action === "update_session") {
-    const allowed = ["venue_name", "setlist", "requests_open", "allow_repeats"];
+    const allowed = ["venue_name", "performer_name", "setlist", "requests_open", "allow_repeats"];
     const changes = Object.fromEntries(Object.entries(body.changes || {}).filter(([key]) => allowed.includes(key)));
     if (!Object.keys(changes).length) return json(400, { error: "No valid changes." });
     changes.updated_at = new Date().toISOString();
